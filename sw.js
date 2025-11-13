@@ -1,4 +1,4 @@
-const CACHE_NAME = 'travel-hub-cache-v3';
+const CACHE_NAME = 'travel-hub-cache-v2';
 const PRECACHE_ASSETS = [
     '/',
     '/index.html',
