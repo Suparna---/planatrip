@@ -11,46 +11,35 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.svg">
 
+    <meta property="og:title" content="TravelHub - AI Travel Planner">
+    <meta property="og:description" content="Generate custom itineraries, find flights, and pack smarter with AI.">
+    <meta property="og:image" content="https://placehold.co/1200x630/4f46e5/ffffff?text=Travel+Hub+Preview">
+    <meta property="og:url" content="https://www.planatrip.xyz">
+    <meta property="og:type" content="website">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // Set theme from localStorage to prevent FOUC (Flash of Unstyled Content)
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
-
-        // Configure Tailwind
         tailwind.config = {
             darkMode: 'class',
-            theme: {
-                extend: {}
-            }
+            theme: { extend: {} }
         }
     </script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f7f9fb; 
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .dark body {
-            background-color: #030712; /* Tailwind gray-950 */
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; transition: background-color 0.3s ease, color 0.3s ease; }
+        .dark body { background-color: #030712; }
         .app-locked { filter: blur(5px); pointer-events: none; transition: filter 0.3s ease; }
-        .container-shadow { 
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); 
-            transition: box-shadow 0.3s ease;
-        }
-        .dark .container-shadow {
-            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.1); /* Indigo shadow */
-        }
+        .container-shadow { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); transition: box-shadow 0.3s ease; }
+        .dark .container-shadow { box-shadow: 0 10px 30px rgba(79, 70, 229, 0.1); }
         .loading-ring { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.5); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
         .loading-ring-small { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(126, 34, 206, 0.5); border-radius: 50%; border-top-color: #6366f1; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -59,42 +48,22 @@
         .star-rating { color: transparent; text-shadow: 0 0 0 #facc15; }
         .star-rating::before { content: '★★★★★'; font-size: 1.25rem; }
         .stars-5::before { content: '★★★★★'; } .stars-4::before { content: '★★★★☆'; } .stars-3::before { content: '★★★☆☆'; } .stars-2::before { content: '★★☆☆☆'; } .stars-1::before { content: '★☆☆☆☆'; } .stars-0::before { content: '☆☆☆☆☆'; }
-        
         .mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; }
-        
         .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background-color: white; padding: 2rem; border-radius: 0.75rem; max-width: 90%; width: 500px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); animation: fadeIn 0.3s ease-out; }
-        .dark .modal-content { background-color: #1f2937; /* gray-800 */ }
-        
+        .dark .modal-content { background-color: #1f2937; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .prose h1, .prose h2, .prose h3 { font-weight: 700; color: #374151; } .prose ul { list-style-type: disc; padding-left: 1.5rem; } .prose li { margin-bottom: 0.5rem; }
-        .dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #f3f4f6; /* gray-100 */ }
-        .dark .prose { color: #d1d5db; /* gray-300 */ }
-
+        .dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #f3f4f6; }
+        .dark .prose { color: #d1d5db; }
         #qa-answer-container, #feedback-comments { max-height: 40vh; overflow-y: auto; }
-        
         /* Feedback Star Rating */
         .rating-stars { display: inline-flex; flex-direction: row-reverse; }
         .rating-stars input { display: none; }
-        .rating-stars label {
-            color: #d1d5db; /* gray-300 */
-            font-size: 2.5rem;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .dark .rating-stars label {
-            color: #4b5563; /* gray-600 */
-        }
-        .rating-stars input:checked ~ label,
-        .rating-stars label:hover,
-        .rating-stars label:hover ~ label {
-            color: #facc15; /* yellow-400 */
-        }
-        .dark .rating-stars input:checked ~ label,
-        .dark .rating-stars label:hover,
-        .dark .rating-stars label:hover ~ label {
-            color: #facc15; /* yellow-400 */
-        }
+        .rating-stars label { color: #d1d5db; font-size: 2.5rem; cursor: pointer; transition: color 0.2s; }
+        .dark .rating-stars label { color: #4b5563; }
+        .rating-stars input:checked ~ label, .rating-stars label:hover, .rating-stars label:hover ~ label { color: #facc15; }
+        .dark .rating-stars input:checked ~ label, .dark .rating-stars label:hover, .dark .rating-stars label:hover ~ label { color: #facc15; }
     </style>
 </head>
 <body class="p-4 md:p-8 dark:bg-gray-950">
@@ -119,12 +88,10 @@
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-4 0H9v2h2V9z" clip-rule="evenodd"></path></svg>
                         <span class="hidden md:inline ml-2">Feedback</span>
                     </button>
-                    
                     <button id="login-btn" onclick="handleLoginClick()" class="ml-2 flex items-center justify-center h-9 px-3 py-1 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
                         <span id="login-text">Login</span>
                     </button>
-                    
                     <button id="dark-mode-toggle" onclick="toggleDarkMode()" class="ml-2 flex items-center justify-center h-9 w-9 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition duration-150 ease-in-out" title="Toggle dark mode">
                         <svg id="theme-icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         <svg id="theme-icon-moon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
@@ -139,7 +106,6 @@
                 <button id="tab-converter" onclick="switchTab('converter-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg"><span class="inline-block w-6 h-6 mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></span>Currency Converter</button>
             </div>
 
-      
             <div id="content-area" class="w-full">
                 <div id="search-panel" class="hidden bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-6 md:p-8 rounded-xl container-shadow">
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700"><span class="inline-block w-6 h-6 mr-2"><svg class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></span>Travel Research & Search</h2>
@@ -184,6 +150,11 @@
                                 </div>
                                 <input type="text" id="cities" name="cities" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Rome, Florence">
                             </div>
+                            
+                            <div class="col-span-1 md:col-span-3">
+                                <label for="staying-at" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Staying At (Optional)</label>
+                                <input type="text" id="staying-at" name="staying-at" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Hotel Artemide or 'Near Central Station'">
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-3 md:grid-cols-5 gap-4">
@@ -214,7 +185,7 @@
                                     <form id="packing-form" class="space-y-4 mb-8">
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div><label for="pack-destination" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Destination</label><input type="text" id="pack-destination" name="pack-destination" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
-                                            <div><label for="pack-duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</LabeL><input type="number" id="pack-duration" name="pack-duration" required min="1" max="60" value="3" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
+                                            <div><label for="pack-duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</LabeL><input type="number" id="pack-duration" name="pack-duration" required min="1" max="60" value="7" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
                                         </div>
                                         <div><label for="pack-season" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Season</label><input type="text" id="pack-season" name="pack-season" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
                                         <div><label for="pack-activities" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Activities</label><input type="text" id="pack-activities" name="pack-activities" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., formal dinner, hiking"></div>
@@ -416,11 +387,11 @@
             if (isLoggedIn) {
                 appContainer.classList.remove('app-locked');
                 loginModal.style.display = 'none';
-                feedbackBtn.style.display = 'flex'; // Show feedback button when logged in
+                feedbackBtn.style.display = 'flex';
             } else {
                 appContainer.classList.add('app-locked');
                 loginModal.style.display = 'flex';
-                feedbackBtn.style.display = 'none'; // Hide feedback button when logged out
+                feedbackBtn.style.display = 'none';
                 currentItineraryData = null;
                 recentItineraries = [];
                 renderItinerary(null);
@@ -439,26 +410,15 @@
         function getCrowdBadge(level) { 
             if (typeof level !== 'string' || !level) return ''; 
             const l = level.toLowerCase(); 
-            const c = { 
-                high: 'bg-red-100 text-red-700', 
-                moderate: 'bg-yellow-100 text-yellow-700', 
-                low: 'bg-green-100 text-green-700' 
-            };
+            const c = { high: 'bg-red-100 text-red-700', moderate: 'bg-yellow-100 text-yellow-700', low: 'bg-green-100 text-green-700' };
             return `<span class="inline-block whitespace-nowrap px-2 py-1 text-xs font-semibold rounded-full ${c[l]||'bg-gray-200'}">Crowd: ${level.charAt(0).toUpperCase()+level.slice(1)}</span>`; 
         }
-        
         function getStarClass(details) { if (typeof details !== 'string') return ''; const m = details.match(/(\d)-star/i); return `stars-${m?Math.min(5,Math.max(0,parseInt(m[1]))):0}`; }
         
-        // --- NEW Helper: Open Q&A from input fields ---
+        // --- Helper: Open Q&A from input fields ---
         window.openFieldSearch = function(inputId, fieldName) {
             const value = document.getElementById(inputId).value.trim();
-            
-            if (!value) {
-                displayMessage(`Please enter a ${fieldName} first to ask about it.`, 'error');
-                return;
-            }
-            
-            // Open the existing Q&A modal using the input value as the context
+            if (!value) { displayMessage(`Please enter a ${fieldName} first to ask about it.`, 'error'); return; }
             openQaModal(value);
         }
 
@@ -487,47 +447,20 @@
         
         // --- Feedback Modal ---
         window.openFeedbackModal = function() {
-            if (!isUserLoggedIn) {
-                displayMessage('Please log in to provide feedback.', 'error');
-                return;
-            }
-            document.getElementById('feedback-modal').classList.remove('hidden');
-            document.getElementById('feedback-form').reset();
+            if (!isUserLoggedIn) { displayMessage('Please log in to provide feedback.', 'error'); return; }
+            document.getElementById('feedback-modal').classList.remove('hidden'); document.getElementById('feedback-form').reset();
         }
-        window.closeFeedbackModal = function() {
-            document.getElementById('feedback-modal').classList.add('hidden');
-        }
+        window.closeFeedbackModal = function() { document.getElementById('feedback-modal').classList.add('hidden'); }
         async function handleFeedbackSubmit(event) {
             event.preventDefault();
-            if (!isUserLoggedIn || !supabaseClient) {
-                displayMessage('You must be logged in to submit feedback.', 'error');
-                return;
-            }
+            if (!isUserLoggedIn || !supabaseClient) { displayMessage('You must be logged in to submit feedback.', 'error'); return; }
             toggleLoading('feedback-form', true, 'Submitting...');
             const formData = new FormData(event.target);
             const rating = formData.get('rating');
             const comments = formData.get('comments');
-            
-            const { error } = await supabaseClient
-                .from('feedback')
-                .insert([
-                    { 
-                        user_id: currentUserId, 
-                        rating: rating ? parseInt(rating) : null,
-                        comments: comments,
-                        user_name: currentUserName
-                    }
-                ]);
-                
+            const { error } = await supabaseClient.from('feedback').insert([{ user_id: currentUserId, rating: rating ? parseInt(rating) : null, comments: comments, user_name: currentUserName }]);
             toggleLoading('feedback-form', false, 'Submit Feedback');
-
-            if (error) {
-                displayMessage(`Error submitting feedback: ${error.message}`, 'error');
-                console.error("Feedback error:", error);
-            } else {
-                displayMessage('Thank you for your feedback!', 'info');
-                closeFeedbackModal();
-            }
+            if (error) { displayMessage(`Error submitting feedback: ${error.message}`, 'error'); console.error("Feedback error:", error); } else { displayMessage('Thank you for your feedback!', 'info'); closeFeedbackModal(); }
         }
 
         // --- Core API Logic (Using Serverless Function) ---
@@ -554,24 +487,44 @@
             if(!data || !data.title) { contentDiv.innerHTML = `<p class="text-gray-500 dark:text-gray-400 italic">Welcome! Please use the form above to generate a new itinerary.</p>`; headerDiv.classList.add('hidden'); headerDiv.innerHTML = ''; document.getElementById('packing-integration-section').classList.add('hidden'); document.getElementById('download-html-btn').classList.add('hidden'); document.getElementById('history-container').classList.add('hidden'); return; }
             const { title, summary, budgetTier, bestSeasonToVisit, numberOfPeople, costPerHeadUSD, days } = deepSanitize(data);
             
+            // 1. Header Stats
             headerDiv.innerHTML = `<h3 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100">${title}</h3><p class="text-gray-600 dark:text-gray-400 mt-2">${summary}</p><div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center"><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Budget</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${budgetTier}</dd></div><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Travelers</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${numberOfPeople}</dd></div><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Cost/Head</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">$${costPerHeadUSD}</dd></div><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Best Season</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${bestSeasonToVisit}</dd></div></div>`;
 
-            let daysHTML = '';
+            let contentHTML = '';
+
+            // 2. Transportation Banner (Using Day 1 Tip)
+            if (days && days.length > 0 && days[0].transportation_tip) {
+                const globalTip = days[0].transportation_tip;
+                contentHTML += `
+                <div class="mt-8 mb-2 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl shadow-sm flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="ml-3">
+                        <h4 class="text-sm font-bold text-blue-800 dark:text-blue-300">Transportation Tip</h4>
+                        <p class="mt-1 text-sm text-blue-700 dark:text-blue-200">${globalTip}</p>
+                    </div>
+                </div>`;
+            }
+
+            // 3. Daily Itinerary Loop
             if (days && Array.isArray(days)) {
                 days.forEach(day => {
-                    daysHTML += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${day.day}: ${day.theme} (${day.city})</h4><div class="mt-4 space-y-4">`;
+                    contentHTML += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${day.day}: ${day.theme} (${day.city})</h4><div class="mt-4 space-y-4">`;
                     if (day.activities && Array.isArray(day.activities)) {
                         day.activities.forEach(activity => {
                             const crowdBadge = activity.crowdLevel ? getCrowdBadge(activity.crowdLevel) : '';
                             const starRating = (activity.type && (activity.type.toLowerCase().includes('hotel') || activity.type.toLowerCase().includes('accommodation'))) ? `<div class="mt-2 star-rating ${getStarClass(activity.details)}"></div>` : '';
                             
-                            daysHTML += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"><div class="flex justify-between items-start"><div class="flex items-center"><h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${activity.name}</h5><button onclick="openQaModal('${sanitizeHTML(activity.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800" title="Ask about ${sanitizeHTML(activity.name)}"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button></div><div class="text-right"><p class="font-semibold text-gray-800 dark:text-gray-100">$${activity.approxCostUSD}</p>${crowdBadge}</div></div><p class="text-sm text-gray-500 dark:text-gray-500">${activity.type}</p><p class="mt-2 text-gray-700 dark:text-gray-300">${activity.details}</p><p class="mt-2 text-xs text-gray-500 dark:text-gray-500">Address: ${activity.address}</p>${starRating}</div>`;
+                            contentHTML += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"><div class="flex justify-between items-start"><div class="flex items-center"><h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${activity.name}</h5><button onclick="openQaModal('${sanitizeHTML(activity.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800" title="Ask about ${sanitizeHTML(activity.name)}"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button></div><div class="text-right"><p class="font-semibold text-gray-800 dark:text-gray-100">$${activity.approxCostUSD}</p>${crowdBadge}</div></div><p class="text-sm text-gray-500 dark:text-gray-500">${activity.type}</p><p class="mt-2 text-gray-700 dark:text-gray-300">${activity.details}</p><p class="mt-2 text-xs text-gray-500 dark:text-gray-500">Address: ${activity.address}</p>${starRating}</div>`;
                         });
                     }
-                    if (day.transportation_tip) { daysHTML += `<div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-300 flex items-start"><svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div><strong>Transportation Tip:</strong> ${day.transportation_tip}</div></div>`; } daysHTML += '</div></div>';
+                    if (day.transportation_tip) { contentHTML += `<div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-300 flex items-start"><svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div><strong>Transportation Tip:</strong> ${day.transportation_tip}</div></div>`; } 
+                    contentHTML += '</div></div>';
                 });
             }
-            contentDiv.innerHTML = daysHTML;
+            
+            contentDiv.innerHTML = contentHTML;
             headerDiv.classList.remove('hidden'); document.getElementById('packing-integration-section').classList.remove('hidden'); document.getElementById('download-html-btn').classList.remove('hidden');
             document.getElementById('pack-destination').value = title; document.getElementById('pack-duration').value = days?.length || 7; document.getElementById('pack-season').value = bestSeasonToVisit;
         }
@@ -607,44 +560,12 @@
         document.body.appendChild(link); link.click(); document.body.removeChild(link); }
         
         function switchTab(panelId) {
-            // Hide all content panels
-            ['search-panel', 'planner-panel', 'flights-panel', 'converter-panel'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'none';
-            });
-            // Show the selected content panel
-            const panel = document.getElementById(panelId);
-            if (panel) panel.style.display = 'block';
-
-            // Reset all desktop tabs
-            ['tab-search', 'tab-planner', 'tab-flights', 'tab-converter'].forEach(id => {
-                const el = document.getElementById(id);
-                if(el) {
-                    el.classList.remove('text-indigo-600', 'border-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
-                    el.classList.add('text-gray-500', 'dark:text-gray-400');
-                }
-            });
-            // Highlight the active desktop tab
-            const tab = document.getElementById(`tab-${panelId.split('-')[0]}`);
-            if(tab) {
-                tab.classList.add('text-indigo-600', 'border-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
-                tab.classList.remove('text-gray-500', 'dark:text-gray-400');
-            }
-
-            // Reset all mobile nav buttons
-            ['nav-search', 'nav-planner', 'nav-flights', 'nav-converter'].forEach(id => {
-                const el = document.getElementById(id);
-                if(el) {
-                    el.classList.remove('text-indigo-600', 'dark:text-indigo-400');
-                    el.classList.add('text-gray-500', 'dark:text-gray-400');
-                }
-            });
-            // Highlight the active mobile nav button
-            const nav = document.getElementById(`nav-${panelId.split('-')[0]}`);
-            if(nav) {
-                nav.classList.add('text-indigo-600', 'dark:text-indigo-400');
-                nav.classList.remove('text-gray-500', 'dark:text-gray-400');
-            }
+            ['search-panel', 'planner-panel', 'flights-panel', 'converter-panel'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+            const panel = document.getElementById(panelId); if (panel) panel.style.display = 'block';
+            ['tab-search', 'tab-planner', 'tab-flights', 'tab-converter'].forEach(id => { const el = document.getElementById(id); if(el) { el.classList.remove('text-indigo-600', 'border-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400'); el.classList.add('text-gray-500', 'dark:text-gray-400'); } });
+            const tab = document.getElementById(`tab-${panelId.split('-')[0]}`); if(tab) { tab.classList.add('text-indigo-600', 'border-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400'); tab.classList.remove('text-gray-500', 'dark:text-gray-400'); }
+            ['nav-search', 'nav-planner', 'nav-flights', 'nav-converter'].forEach(id => { const el = document.getElementById(id); if(el) { el.classList.remove('text-indigo-600', 'dark:text-indigo-400'); el.classList.add('text-gray-500', 'dark:text-gray-400'); } });
+            const nav = document.getElementById(`nav-${panelId.split('-')[0]}`); if(nav) { nav.classList.add('text-indigo-600', 'dark:text-indigo-400'); nav.classList.remove('text-gray-500', 'dark:text-gray-400'); }
         }
 
         // --- Main App Initialization ---
@@ -657,23 +578,17 @@
                 isUserLoggedIn = !!user;
                 currentUserId = user?.id || 'anonymous_user';
                 currentUserName = user?.user_metadata?.full_name || user?.email || 'Anonymous';
-                
                 setUIState(isUserLoggedIn); 
-                if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && user) {
-                    if (event === 'SIGNED_IN') { displayMessage(`Welcome back, ${currentUserName}!`, 'info'); }
-                    loadItineraries();
-                }
+                if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && user) { if (event === 'SIGNED_IN') { displayMessage(`Welcome back, ${currentUserName}!`, 'info'); } loadItineraries(); }
             });
 
             document.getElementById('magic-link-form').addEventListener('submit', initiateMagicLink);
             document.getElementById('qa-form').addEventListener('submit', handleQaSubmit);
             document.querySelector('#qa-modal .modal-content').addEventListener('click', (e) => e.stopPropagation());
             document.getElementById('qa-modal').addEventListener('click', closeQaModal);
-            
             document.getElementById('feedback-form').addEventListener('submit', handleFeedbackSubmit);
             document.querySelector('#feedback-modal .modal-content').addEventListener('click', (e) => e.stopPropagation());
             document.getElementById('feedback-modal').addEventListener('click', closeFeedbackModal);
-            
             document.getElementById('planner-form').addEventListener('submit', generateItinerary);
             document.getElementById('search-form').addEventListener('submit', groundedSearch);
             document.getElementById('packing-form').addEventListener('submit', generatePackingList);

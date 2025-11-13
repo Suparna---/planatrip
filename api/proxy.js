@@ -1,6 +1,5 @@
+// api/proxy.js
 // This is a serverless function that will act as a secure proxy to the Google AI API.
-// You would deploy this to a service like Netlify or Vercel in a folder named `api`.
-// This file is unchanged from your original upload.
 
 export default async function handler(req, res) {
     // Only allow POST requests
@@ -36,12 +35,17 @@ Do not add any text, conversational chat, or markdown outside of the final JSON 
 
 User Request:
 - Destination: ${data.cities}, ${data.country}
+- Staying At (Starting Point): ${data['staying-at'] || 'Central location'} 
 - Duration: ${data.duration} days
 - Travelers: ${data['num-people']}
 - Budget: ${data.budget}
 - Pace: ${data['trip-pace']}
 - Accommodation: ${data['accommodation-type']}
 - Interests: ${data.interests || 'N/A'}
+
+IMPORTANT INSTRUCTION:
+If "Staying At" is specific (not 'Central location'), you MUST assume the user starts their day there. 
+Optimise the daily order of activities to minimize travel time from that starting point.
 
 JSON Schema Instructions:
 1.  **title**: Generate a concise, catchy title for the trip (e.g., "3-Day Foodie Tour of Rome").
