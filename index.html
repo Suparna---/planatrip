@@ -20,6 +20,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -27,10 +28,7 @@
         } else {
             document.documentElement.classList.remove('dark');
         }
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: {} }
-        }
+        tailwind.config = { darkMode: 'class', theme: { extend: {} } }
     </script>
     
     <style>
@@ -54,16 +52,9 @@
         .dark .modal-content { background-color: #1f2937; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .prose h1, .prose h2, .prose h3 { font-weight: 700; color: #374151; } .prose ul { list-style-type: disc; padding-left: 1.5rem; } .prose li { margin-bottom: 0.5rem; }
-        .dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #f3f4f6; }
-        .dark .prose { color: #d1d5db; }
+        .dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #f3f4f6; } .dark .prose { color: #d1d5db; }
         #qa-answer-container, #feedback-comments { max-height: 40vh; overflow-y: auto; }
-        /* Feedback Star Rating */
-        .rating-stars { display: inline-flex; flex-direction: row-reverse; }
-        .rating-stars input { display: none; }
-        .rating-stars label { color: #d1d5db; font-size: 2.5rem; cursor: pointer; transition: color 0.2s; }
-        .dark .rating-stars label { color: #4b5563; }
-        .rating-stars input:checked ~ label, .rating-stars label:hover, .rating-stars label:hover ~ label { color: #facc15; }
-        .dark .rating-stars input:checked ~ label, .dark .rating-stars label:hover, .dark .rating-stars label:hover ~ label { color: #facc15; }
+        .rating-stars { display: inline-flex; flex-direction: row-reverse; } .rating-stars input { display: none; } .rating-stars label { color: #d1d5db; font-size: 2.5rem; cursor: pointer; transition: color 0.2s; } .dark .rating-stars label { color: #4b5563; } .rating-stars input:checked ~ label, .rating-stars label:hover, .rating-stars label:hover ~ label { color: #facc15; } .dark .rating-stars input:checked ~ label, .dark .rating-stars label:hover, .dark .rating-stars label:hover ~ label { color: #facc15; }
     </style>
 </head>
 <body class="p-4 md:p-8 dark:bg-gray-950">
@@ -82,7 +73,6 @@
                     </h1>
                     <p class="text-center text-gray-500 dark:text-gray-400 text-base mt-1">Plan a trip...</p>
                 </div>
-                
                 <div class="flex items-center flex-shrink-0 h-10 mt-4 sm:absolute sm:top-2 sm:right-0 sm:mt-0">
                     <button id="feedback-btn" onclick="openFeedbackModal()" class="ml-2 flex items-center justify-center h-9 px-2 py-1 border border-indigo-600 rounded-lg shadow-sm text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-gray-700 focus:outline-none transition duration-150 ease-in-out" title="Provide Feedback">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-4 0H9v2h2V9z" clip-rule="evenodd"></path></svg>
@@ -100,24 +90,18 @@
             </div>
             
             <div class="hidden md:flex border-b border-gray-200 dark:border-gray-700 mb-8 justify-center">
-                <button id="tab-search" onclick="switchTab('search-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg"><span class="inline-block w-6 h-6 mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></span>Travel Research</button>
-                <button id="tab-planner" onclick="switchTab('planner-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg"><span class="inline-block w-6 h-6 mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>AI Travel Planner</button>
-                <button id="tab-flights" onclick="switchTab('flights-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg"><span class="inline-block w-6 h-6 mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></span>Flight Search</button>
-                <button id="tab-converter" onclick="switchTab('converter-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg"><span class="inline-block w-6 h-6 mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></span>Currency Converter</button>
+                <button id="tab-search" onclick="switchTab('search-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg">Research</button>
+                <button id="tab-planner" onclick="switchTab('planner-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg">AI Planner</button>
+                <button id="tab-flights" onclick="switchTab('flights-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg">Flights</button>
+                <button id="tab-converter" onclick="switchTab('converter-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg">Converter</button>
             </div>
 
             <div id="content-area" class="w-full">
                 <div id="search-panel" class="hidden bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-6 md:p-8 rounded-xl container-shadow">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700"><span class="inline-block w-6 h-6 mr-2"><svg class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></span>Travel Research & Search</h2>
+                     <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700">Travel Research & Search</h2>
                     <form id="search-form" class="space-y-4">
-                        <div>
-                            <label for="query" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Search Query</label>
-                            <div class="mt-1 relative rounded-lg shadow-sm">
-                                <input type="text" id="query" name="query" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder:text-gray-500 focus:border-indigo-500 focus:ring-indigo-500 p-3 border pr-10" placeholder="e.g., Top 5 restaurants in Paris" oninput="toggleClearButton(this)">
-                                <button type="button" id="clear-search-btn" onclick="clearSearchInput()" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden focus:outline-none" aria-label="Clear search input"><svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-                            </div>
-                        </div>
-                        <button type="submit" id="search-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition disabled:bg-indigo-400">Search Web for Facts</button>
+                        <div><label for="query" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Search Query</label><input type="text" id="query" name="query" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-3 border" placeholder="e.g., Top 5 restaurants in Paris"></div>
+                        <button type="submit" id="search-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Search Web for Facts</button>
                     </form>
                     <div id="search-output" class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
                         <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 hidden" id="search-title">Search Results</h3>
@@ -127,36 +111,19 @@
                 </div>
 
                 <div id="planner-panel" class="hidden bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-6 md:p-8 rounded-xl container-shadow">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700"><span class="inline-block w-6 h-6 mr-2"><svg class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>AI Travel Planner</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700">AI Travel Planner</h2>
                     <form id="planner-form" class="space-y-4 mb-8">
-                        
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <div class="flex items-center justify-between mb-1">
-                                    <label for="country" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Country</label>
-                                    <button type="button" onclick="openFieldSearch('country', 'Country')" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-full p-1 transition" title="Ask AI about this Country">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    </button>
-                                </div>
+                                <div class="flex items-center justify-between mb-1"><label for="country" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Country</label><button type="button" onclick="openFieldSearch('country', 'Country')" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-full p-1 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button></div>
                                 <input type="text" id="country" name="country" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Italy">
                             </div>
-                            
                             <div class="md:col-span-2">
-                                <div class="flex items-center justify-between mb-1">
-                                    <label for="cities" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cities</label>
-                                    <button type="button" onclick="openFieldSearch('cities', 'City')" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-full p-1 transition" title="Ask AI about these Cities">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    </button>
-                                </div>
+                                <div class="flex items-center justify-between mb-1"><label for="cities" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cities</label><button type="button" onclick="openFieldSearch('cities', 'City')" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-full p-1 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button></div>
                                 <input type="text" id="cities" name="cities" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Rome, Florence">
                             </div>
-                            
-                            <div class="col-span-1 md:col-span-3">
-                                <label for="staying-at" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Staying At (Optional)</label>
-                                <input type="text" id="staying-at" name="staying-at" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Hotel Artemide or 'Near Central Station'">
-                            </div>
+                            <div class="col-span-1 md:col-span-3"><label for="staying-at" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Staying At (Optional)</label><input type="text" id="staying-at" name="staying-at" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Hotel Artemide"></div>
                         </div>
-
                         <div class="grid grid-cols-3 md:grid-cols-5 gap-4">
                             <div><label for="duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</label><input type="number" id="duration" name="duration" required min="1" max="30" value="3" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
                             <div><label for="num-people" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Travelers</label><input type="number" id="num-people" name="num-people" required min="1" max="10" value="2" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
@@ -167,7 +134,6 @@
                             <div><label for="trip-pace" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Trip Pace</label><select id="trip-pace" name="trip-pace" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white"><option value="Standard" selected>Standard</option><option value="Jam-Packed">Jam-Packed</option><option value="Leisure">Leisure</option></select></div>
                         </div>
                         <div><label for="interests" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Interests</label><input type="text" id="interests" name="interests" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., history, hiking"></div>
-                        <button type="button" id="example-btn" onclick="tryExample()" class="w-full flex justify-center items-center py-3 px-4 border border-indigo-600 dark:border-indigo-700 rounded-lg shadow-sm text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition"><span class="inline-block w-4 h-4 mr-2"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></span>Try Paris Example</button>
                         <button type="submit" id="plan-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition disabled:bg-indigo-400">Generate Itinerary</button>
                     </form>
                     <div id="planner-output" class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
@@ -185,7 +151,7 @@
                                     <form id="packing-form" class="space-y-4 mb-8">
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div><label for="pack-destination" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Destination</label><input type="text" id="pack-destination" name="pack-destination" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
-                                            <div><label for="pack-duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</LabeL><input type="number" id="pack-duration" name="pack-duration" required min="1" max="60" value="7" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
+                                            <div><label for="pack-duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</LabeL><input type="number" id="pack-duration" name="pack-duration" required min="1" max="60" value="3" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
                                         </div>
                                         <div><label for="pack-season" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Season</label><input type="text" id="pack-season" name="pack-season" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
                                         <div><label for="pack-activities" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Activities</label><input type="text" id="pack-activities" name="pack-activities" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., formal dinner, hiking"></div>
@@ -198,12 +164,12 @@
                                 </div>
                             </div>
                         </div>
-                        <button id="download-html-btn" onclick="downloadHTML()" class="hidden mt-6 w-full py-3 px-4 rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition"><span class="inline-block w-4 h-4 mr-1"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></span>Download Itinerary</button>
+                        <button id="download-pdf-btn" onclick="downloadPDF()" class="hidden mt-6 w-full py-3 px-4 rounded-lg shadow-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition"><span class="inline-block w-4 h-4 mr-1"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></span>Download as PDF</button>
                     </div>
                 </div>
 
                 <div id="flights-panel" class="hidden bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-6 md:p-8 rounded-xl container-shadow">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700"><span class="inline-block w-6 h-6 mr-2"><svg class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></span>AI Flight Search</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700">AI Flight Search</h2>
                     <form id="flights-form" class="space-y-4 mb-8">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div><label for="flight-origin" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Origin</label><input type="text" id="flight-origin" name="flight-origin" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., London, LHR"></div>
@@ -225,393 +191,242 @@
                 </div>
 
                 <div id="converter-panel" class="hidden bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-6 md:p-8 rounded-xl container-shadow">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700"><span class="inline-block w-6 h-6 mr-2"><svg class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></span>Currency Converter</h2 >
+                     <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700">Currency Converter</h2>
                     <div class="space-y-4">
-                        <div>
-                            <label for="convert-amount-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
-                            <input type="number" id="convert-amount-standalone" value="100" min="1" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border text-gray-800 focus:border-indigo-500 focus:ring-indigo-500">
-                        </div>
+                        <div><label for="convert-amount-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label><input type="number" id="convert-amount-standalone" value="100" min="1" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border text-gray-800"></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                            <div>
-                                <label for="convert-from-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">From</label>
-                                <select id="convert-from-standalone" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white text-gray-800 focus:border-indigo-500 focus:ring-indigo-500"></select>
-                            </div>
-                            <div>
-                                <label for="convert-to-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">To</label>
-                                <select id="convert-to-standalone" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white text-gray-800 focus:border-indigo-500 focus:ring-indigo-500"></select>
-                            </div>
+                            <div><label for="convert-from-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">From</label><select id="convert-from-standalone" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white text-gray-800"></select></div>
+                            <div><label for="convert-to-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">To</label><select id="convert-to-standalone" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white text-gray-800"></select></div>
                         </div>
                         <div class="flex items-end space-x-4">
-                            <div class="flex-1">
-                                <label for="converter-result-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Converted Amount</label>
-                                <div id="converter-result-standalone" class="mt-1 w-full text-lg font-bold text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 p-3 rounded-lg border border-gray-300 dark:border-gray-600">
-                                    -
-                                </div>
-                            </div>
-                            <button id="convert-btn-standalone" onclick="convertCurrencyStandalone()" class="flex-shrink-0 h-12 py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:bg-indigo-400">
-                                Convert
-                            </button>
+                            <div class="flex-1"><label for="converter-result-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Converted Amount</label><div id="converter-result-standalone" class="mt-1 w-full text-lg font-bold text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 p-3 rounded-lg border border-gray-300 dark:border-gray-600">-</div></div>
+                            <button id="convert-btn-standalone" onclick="convertCurrencyStandalone()" class="flex-shrink-0 h-12 py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:bg-indigo-400">Convert</button>
                         </div>
-                        <div id="converter-loading-standalone" class="hidden text-center py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                            <span class="loading-ring-small mr-2"></span> Fetching live exchange rate...
-                        </div>
+                        <div id="converter-loading-standalone" class="hidden text-center py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400"><span class="loading-ring-small mr-2"></span> Fetching live exchange rate...</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="login-modal" class="modal-backdrop">
-        <div class="modal-content">
-            <h3 class="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mb-4 border-b pb-2 border-gray-100 dark:border-gray-700">Login / Sign Up</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Enter your details for a passwordless magic link. Your itineraries will be saved securely.</p>
-            <form id="magic-link-form" class="space-y-4">
-                <div><label for="auth-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Your Name</label><input type="text" id="auth-name" name="auth-name" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Jane Doe"></div>
-                <div><label for="auth-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label><input type="email" id="auth-email" name="auth-email" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="you@example.com"></div>
-                <button type="submit" id="magic-link-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Send Magic Link</button>
-            </form>
-        </div>
-    </div>
+    <div id="login-modal" class="modal-backdrop"><div class="modal-content"><h3 class="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mb-4 border-b pb-2 border-gray-100 dark:border-gray-700">Login / Sign Up</h3><p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Enter your details for a passwordless magic link. Your itineraries will be saved securely.</p><form id="magic-link-form" class="space-y-4"><div><label for="auth-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Your Name</label><input type="text" id="auth-name" name="auth-name" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Jane Doe"></div><div><label for="auth-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label><input type="email" id="auth-email" name="auth-email" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="you@example.com"></div><button type="submit" id="magic-link-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Send Magic Link</button></form></div></div>
+    <div id="qa-modal" class="modal-backdrop hidden"><div class="modal-content"><div class="flex justify-between items-start mb-4"><h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Ask a Question</h3><button onclick="closeQaModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button></div><p class="text-sm text-gray-600 dark:text-gray-400 mb-2">About: <strong id="qa-context"></strong></p><form id="qa-form" class="space-y-4"><input type="text" id="qa-question" name="qa-question" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., What is the dress code?"><button type="submit" id="qa-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Get Answer</button></form><div id="qa-answer-container" class="mt-4 pt-4 border-t dark:border-gray-700 hidden"><div id="qa-answer" class="prose max-w-none text-gray-700 dark:text-gray-300 text-sm"></div></div></div></div>
+    <div id="feedback-modal" class="modal-backdrop hidden"><div class="modal-content"><div class="flex justify-between items-start mb-4"><h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Provide Feedback</h3><button onclick="closeFeedbackModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button></div><p class="text-sm text-gray-600 dark:text-gray-400 mb-4">We'd love to know what you think!</p><form id="feedback-form" class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Experience?</label><div class="rating-stars"><input type="radio" id="star5" name="rating" value="5"><label for="star5">★</label><input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label><input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label><input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label><input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label></div></div><div><label for="feedback-comments" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Comments</label><textarea id="feedback-comments" name="comments" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></textarea></div><button type="submit" id="feedback-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Submit</button></form></div></div>
     
-    <div id="qa-modal" class="modal-backdrop hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-start mb-4">
-                <h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Ask a Question</h3>
-                <button onclick="closeQaModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button>
-            </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">About: <strong id="qa-context"></strong></p>
-            <form id="qa-form" class="space-y-4">
-                <input type="text" id="qa-question" name="qa-question" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., What is the dress code?">
-                <button type="submit" id="qa-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Get Answer</button>
-            </form>
-            <div id="qa-answer-container" class="mt-4 pt-4 border-t dark:border-gray-700 hidden">
-                 <div id="qa-answer" class="prose max-w-none text-gray-700 dark:text-gray-300 text-sm"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="feedback-modal" class="modal-backdrop hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-start mb-4">
-                <h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Provide Feedback</h3>
-                <button onclick="closeFeedbackModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button>
-            </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">We'd love to know what you think! Your feedback helps us improve.</p>
-            <form id="feedback-form" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Overall, how was your experience?</label>
-                    <div class="rating-stars">
-                        <input type="radio" id="star5" name="rating" value="5"><label for="star5" title="5 stars">★</label>
-                        <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4 stars">★</label>
-                        <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3 stars">★</label>
-                        <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2 stars">★</label>
-                        <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1 star">★</label>
-                    </div>
-                </div>
-                <div>
-                    <label for="feedback-comments" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Comments, bugs, or suggestions?</label>
-                    <textarea id="feedback-comments" name="comments" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="What did you like? What could be better?"></textarea>
-                </div>
-                <button type="submit" id="feedback-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Submit Feedback</button>
-            </form>
-        </div>
-    </div>
-
-    <nav class="mobile-nav md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg">
-        <div class="max-w-4xl mx-auto flex justify-around">
-            <button id="nav-search" onclick="switchTab('search-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition duration-200 focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <span class="text-xs font-medium">Research</span>
-            </button>
-            <button id="nav-planner" onclick="switchTab('planner-panel')" class="flex flex-col items-center justify-center p-3 text-indigo-600 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition duration-200 focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span class="text-xs font-medium">Planner</span>
-            </button>
-            <button id="nav-flights" onclick="switchTab('flights-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition duration-200 focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                <span class="text-xs font-medium">Flights</span>
-            </button>
-            <button id="nav-converter" onclick="switchTab('converter-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition duration-200 focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                <span class="text-xs font-medium">Currency</span>
-            </button>
-        </div>
-    </nav>
+    <nav class="mobile-nav md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg"><div class="max-w-4xl mx-auto flex justify-around"><button id="nav-search" onclick="switchTab('search-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg><span class="text-xs font-medium">Research</span></button><button id="nav-planner" onclick="switchTab('planner-panel')" class="flex flex-col items-center justify-center p-3 text-indigo-600 dark:text-indigo-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="text-xs font-medium">Planner</span></button><button id="nav-flights" onclick="switchTab('flights-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg><span class="text-xs font-medium">Flights</span></button><button id="nav-converter" onclick="switchTab('converter-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg><span class="text-xs font-medium">Currency</span></button></div></nav>
 
     <script>
         // --- Globals & Constants ---
         let currentItineraryData = null, recentItineraries = [];
+        let currentItineraryId = null; // Store ID to update favorites
         const SUPABASE_URL = 'https://omwqfqzcighrmqoogmxj.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9td3FmcXpjaWdocm1xb29nbXhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2NTQwNzYsImV4cCI6MjA3NjIzMDA3Nn0.pVPKedBrEBj3QNsc5eELj8ARWvuqfAyyWIuwS6RWsHk';
-        
         let supabaseClient = null, isUserLoggedIn = false, currentUserId = 'anonymous_user', currentUserName = 'Anonymous';
-        
         const CURRENCIES = [ { code: "USD", name: "US Dollar", defaultFrom: true }, { code: "EUR", name: "Euro", defaultTo: true }, { code: "GBP", name: "British Pound" }, { code: "JPY", name: "Japanese Yen" }, { code: "CAD", name: "Canadian Dollar" }, { code: "AUD", name: "Australian Dollar" }, { code: "CHF", name: "Swiss Franc" }, { code: "CNY", name: "Chinese Yuan" }, { code: "INR", name: "Indian Rupee" }, { code: "HKD", name: "Hong Kong Dollar" }, { code: "NZD", name: "New Zealand Dollar" }, { code: "SEK", name: "Swedish Krona" }, { code: "KRW", name: "South Korean Won" }, { code: "SGD", name: "Singapore Dollar" }, { code: "NOK", name: "Norwegian Krone" }, { code: "MXN", name: "Mexican Peso" }, { code: "RUB", name: "Russian Ruble" }, { code: "ZAR", name: "South African Rand" }, { code: "TRY", name: "Turkish Lira" }, { code: "BRL", name: "Brazilian Real" } ];
-        
-        // --- Dark Mode Functions ---
+
+        // --- UI Logic ---
         function setDarkMode(isDark) {
-            const sunIcon = document.getElementById('theme-icon-sun');
-            const moonIcon = document.getElementById('theme-icon-moon');
-            
-            if (isDark) {
-                document.documentElement.classList.add('dark');
-                if (sunIcon) sunIcon.classList.remove('hidden');
-                if (moonIcon) moonIcon.classList.add('hidden');
-                localStorage.theme = 'dark';
-            } else {
-                document.documentElement.classList.remove('dark');
-                if (sunIcon) sunIcon.classList.add('hidden');
-                if (moonIcon) moonIcon.classList.remove('hidden');
-                localStorage.theme = 'light';
-            }
+            const sunIcon = document.getElementById('theme-icon-sun'); const moonIcon = document.getElementById('theme-icon-moon');
+            if (isDark) { document.documentElement.classList.add('dark'); if (sunIcon) sunIcon.classList.remove('hidden'); if (moonIcon) moonIcon.classList.add('hidden'); localStorage.theme = 'dark'; } 
+            else { document.documentElement.classList.remove('dark'); if (sunIcon) sunIcon.classList.add('hidden'); if (moonIcon) moonIcon.classList.remove('hidden'); localStorage.theme = 'light'; }
         }
-
-        window.toggleDarkMode = function() {
-            const isDark = document.documentElement.classList.contains('dark');
-            setDarkMode(!isDark);
-        }
-
-        // --- Utility & UI Functions ---
+        window.toggleDarkMode = function() { setDarkMode(!document.documentElement.classList.contains('dark')); }
         function sanitizeHTML(str) { if (typeof str !== 'string') return str; const temp = document.createElement('div'); temp.textContent = str; return temp.innerHTML; }
-        function deepSanitize(data) { if (data === null || data === undefined) { return data; } if (Array.isArray(data)) { return data.map(item => deepSanitize(item)); } if (typeof data === 'object') { const sanitizedObject = {}; for (const key in data) { if (Object.prototype.hasOwnProperty.call(data, key)) { sanitizedObject[key] = deepSanitize(data[key]); } } return sanitizedObject; } if (typeof data === 'string') { return sanitizeHTML(data); } return data; }
+        function deepSanitize(data) { if (data === null || data === undefined) { return data; } if (Array.isArray(data)) { return data.map(item => deepSanitize(item)); } if (typeof data === 'object') { const sanitizedObject = {}; for (const key in data) { if (Object.prototype.hasOwnProperty.call(data, key)) { sanitizedObject[key] = deepSanitize(data[key]); } } return sanitizedObject; } return sanitizeHTML(data); }
         function setUIState(isLoggedIn) {
-            const appContainer = document.getElementById('app-container');
-            const loginModal = document.getElementById('login-modal');
-            const loginText = document.getElementById('login-text');
-            const feedbackBtn = document.getElementById('feedback-btn');
-            
-            loginText.textContent = isLoggedIn ? 'Logout' : 'Login';
+            document.getElementById('login-text').textContent = isLoggedIn ? 'Logout' : 'Login';
             document.getElementById('login-btn').classList.toggle('bg-red-600', isLoggedIn);
-            document.getElementById('login-btn').classList.toggle('hover:bg-red-700', isLoggedIn);
-            
-            if (isLoggedIn) {
-                appContainer.classList.remove('app-locked');
-                loginModal.style.display = 'none';
-                feedbackBtn.style.display = 'flex';
-            } else {
-                appContainer.classList.add('app-locked');
-                loginModal.style.display = 'flex';
-                feedbackBtn.style.display = 'none';
-                currentItineraryData = null;
-                recentItineraries = [];
-                renderItinerary(null);
-            }
+            if (isLoggedIn) { document.getElementById('app-container').classList.remove('app-locked'); document.getElementById('login-modal').style.display = 'none'; document.getElementById('feedback-btn').style.display = 'flex'; } 
+            else { document.getElementById('app-container').classList.add('app-locked'); document.getElementById('login-modal').style.display = 'flex'; document.getElementById('feedback-btn').style.display = 'none'; currentItineraryData = null; recentItineraries = []; renderItinerary(null); }
         }
         window.handleLoginClick = async function() { if (!supabaseClient) return; if (isUserLoggedIn) { await supabaseClient.auth.signOut(); } }
-        window.initiateMagicLink = async function(event) { event.preventDefault(); const email = document.getElementById('auth-email').value, name = document.getElementById('auth-name').value; if (!email || !name) { displayMessage('Please enter name and email.', 'error'); return; } toggleLoading('magic-link-form', true, 'Sending...'); const { error } = await supabaseClient.auth.signInWithOtp({ email: email, options: { data: { full_name: name } } });
-        toggleLoading('magic-link-form', false); if (error) { displayMessage(`Auth Error: ${error.message}`, 'error'); } else { document.getElementById('login-modal').style.display = 'none'; displayMessage(`Magic link sent to ${email}.`, 'info'); } }
+        window.initiateMagicLink = async function(e) { e.preventDefault(); const email = document.getElementById('auth-email').value, name = document.getElementById('auth-name').value; if (!email || !name) { displayMessage('Please enter name and email.', 'error'); return; } toggleLoading('magic-link-form', true, 'Sending...'); const { error } = await supabaseClient.auth.signInWithOtp({ email: email, options: { data: { full_name: name } } }); toggleLoading('magic-link-form', false); if (error) displayMessage(`Auth Error: ${error.message}`, 'error'); else { document.getElementById('login-modal').style.display = 'none'; displayMessage(`Magic link sent to ${email}.`, 'info'); } }
         
-        function displayMessage(message, type = 'info') { const existing = document.getElementById('status-message'); if (existing) existing.remove(); const msgElement = document.createElement('div'); msgElement.id = 'status-message'; msgElement.className = `p-3 fixed top-4 left-1/2 transform -translate-x-1/2 z-[1001] text-sm rounded-lg shadow-xl ${type === 'error' ? 'bg-red-600' : 'bg-blue-600'} text-white transition-all`; msgElement.style.opacity = '1'; document.body.appendChild(msgElement); msgElement.textContent = message; setTimeout(() => { msgElement.style.opacity = '0'; setTimeout(() => msgElement.remove(), 500); }, 5000); }
-        function toggleLoading(formId, isLoading, statusText = 'Loading...') { const ids = { 'planner-form': { btn: 'plan-btn', text: 'Generate Itinerary', ex: 'example-btn' }, 'search-form': { btn: 'search-btn', text: 'Search Web for Facts' }, 'packing-form': { btn: 'pack-btn', text: 'Generate Packing List' }, 'flights-form': { btn: 'flights-btn', text: 'Find Cheapest Flights' }, 'converter-form-standalone': { btn: 'convert-btn-standalone', text: 'Convert' }, 'magic-link-form': { btn: 'magic-link-btn', text: 'Send Magic Link' }, 'qa-form': {btn: 'qa-submit-btn', text: 'Get Answer'}, 'feedback-form': {btn: 'feedback-submit-btn', text: 'Submit Feedback'} };
-        const config = ids[formId]; if (!config) return; const button = document.getElementById(config.btn); const exampleBtn = config.ex ? document.getElementById(config.ex) : null;
-        button.disabled = isLoading; if (exampleBtn) exampleBtn.disabled = isLoading; button.innerHTML = isLoading ? `<span class="loading-ring mr-2"></span> ${statusText}` : config.text; }
-        window.toggleAccordion = function(id) { document.getElementById(`content-${id}`).classList.toggle('open'); document.getElementById(`icon-${id}`).querySelector('svg').style.transform = document.getElementById(`content-${id}`).classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)'; }
+        function displayMessage(msg, type = 'info') { const ex = document.getElementById('status-message'); if (ex) ex.remove(); const el = document.createElement('div'); el.id = 'status-message'; el.className = `p-3 fixed top-4 left-1/2 transform -translate-x-1/2 z-[1001] text-sm rounded-lg shadow-xl ${type === 'error' ? 'bg-red-600' : 'bg-blue-600'} text-white transition-all`; el.textContent = msg; document.body.appendChild(el); setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 5000); }
+        function toggleLoading(fid, load, txt = 'Loading...') { const b = document.getElementById({ 'planner-form': 'plan-btn', 'search-form': 'search-btn', 'packing-form': 'pack-btn', 'flights-form': 'flights-btn', 'magic-link-form': 'magic-link-btn', 'qa-form': 'qa-submit-btn', 'feedback-form': 'feedback-submit-btn' }[fid]); if (b) { b.disabled = load; b.innerHTML = load ? `<span class="loading-ring mr-2"></span> ${txt}` : b.innerText; } }
+        window.toggleAccordion = function(id) { const el = document.getElementById(`content-${id}`); el.classList.toggle('open'); document.getElementById(`icon-${id}`).querySelector('svg').style.transform = el.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)'; }
+        function getCrowdBadge(l) { const c = { high: 'bg-red-100 text-red-700', moderate: 'bg-yellow-100 text-yellow-700', low: 'bg-green-100 text-green-700' }; return l ? `<span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ${c[l.toLowerCase()]||'bg-gray-200'}">Crowd: ${l}</span>` : ''; }
+        function getStarClass(d) { const m = d?.match(/(\d)-star/i); return `stars-${m?Math.min(5,Math.max(0,parseInt(m[1]))):0}`; }
+        window.openFieldSearch = function(id, name) { const v = document.getElementById(id).value.trim(); if (!v) { displayMessage(`Enter a ${name} first.`, 'error'); return; } openQaModal(v); }
         
-        function getCrowdBadge(level) { 
-            if (typeof level !== 'string' || !level) return ''; 
-            const l = level.toLowerCase(); 
-            const c = { high: 'bg-red-100 text-red-700', moderate: 'bg-yellow-100 text-yellow-700', low: 'bg-green-100 text-green-700' };
-            return `<span class="inline-block whitespace-nowrap px-2 py-1 text-xs font-semibold rounded-full ${c[l]||'bg-gray-200'}">Crowd: ${level.charAt(0).toUpperCase()+level.slice(1)}</span>`; 
-        }
-        function getStarClass(details) { if (typeof details !== 'string') return ''; const m = details.match(/(\d)-star/i); return `stars-${m?Math.min(5,Math.max(0,parseInt(m[1]))):0}`; }
-        
-        // --- Helper: Open Q&A from input fields ---
-        window.openFieldSearch = function(inputId, fieldName) {
-            const value = document.getElementById(inputId).value.trim();
-            if (!value) { displayMessage(`Please enter a ${fieldName} first to ask about it.`, 'error'); return; }
-            openQaModal(value);
-        }
-
-        // --- Contextual Q&A Modal ---
-        window.openQaModal = function(context) { document.getElementById('qa-modal').classList.remove('hidden'); document.getElementById('qa-context').textContent = context; document.getElementById('qa-question').value = ''; document.getElementById('qa-answer-container').classList.add('hidden'); document.getElementById('qa-answer').innerHTML = ''; }
+        // --- Modals ---
+        window.openQaModal = function(c) { document.getElementById('qa-modal').classList.remove('hidden'); document.getElementById('qa-context').textContent = c; document.getElementById('qa-question').value = ''; document.getElementById('qa-answer-container').classList.add('hidden'); }
         window.closeQaModal = function() { document.getElementById('qa-modal').classList.add('hidden'); }
-        async function handleQaSubmit(event) {
-            event.preventDefault();
-            const question = document.getElementById('qa-question').value;
-            const context = document.getElementById('qa-context').textContent;
-            const answerContainer = document.getElementById('qa-answer-container');
-            const answerDiv = document.getElementById('qa-answer');
-            toggleLoading('qa-form', true, 'Finding answer...');
-            answerContainer.classList.remove('hidden');
-            answerDiv.innerHTML = '<div class="flex justify-center items-center"><span class="loading-ring-small"></span></div>';
-            try {
-                const result = await callApiProxy({ type: 'contextualQa', context: context, question: question });
-                answerDiv.innerHTML = marked.parse(result.candidates[0].content.parts[0].text);
-            } catch (error) {
-                answerDiv.innerHTML = `<p class="text-red-600">Sorry, I couldn't find an answer.</p>`;
-                displayMessage(error.message, 'error');
-            } finally {
-                toggleLoading('qa-form', false, 'Get Answer');
+        window.openFeedbackModal = function() { if (!isUserLoggedIn) return displayMessage('Login to verify.', 'error'); document.getElementById('feedback-modal').classList.remove('hidden'); }
+        window.closeFeedbackModal = function() { document.getElementById('feedback-modal').classList.add('hidden'); }
+
+        // --- NEW FEATURES: Share, Speak, PDF, Star ---
+        window.shareItinerary = async function() {
+            if (!currentItineraryData) return;
+            const text = `Check out my trip to ${currentItineraryData.title}! Planned with TravelHub.`;
+            if (navigator.share) {
+                try { await navigator.share({ title: 'My Trip', text: text, url: 'https://www.planatrip.xyz' }); } catch (err) { console.log('Share failed', err); }
+            } else {
+                navigator.clipboard.writeText(text + ' https://www.planatrip.xyz');
+                displayMessage('Link copied to clipboard!');
             }
         }
-        
-        // --- Feedback Modal ---
-        window.openFeedbackModal = function() {
-            if (!isUserLoggedIn) { displayMessage('Please log in to provide feedback.', 'error'); return; }
-            document.getElementById('feedback-modal').classList.remove('hidden'); document.getElementById('feedback-form').reset();
-        }
-        window.closeFeedbackModal = function() { document.getElementById('feedback-modal').classList.add('hidden'); }
-        async function handleFeedbackSubmit(event) {
-            event.preventDefault();
-            if (!isUserLoggedIn || !supabaseClient) { displayMessage('You must be logged in to submit feedback.', 'error'); return; }
-            toggleLoading('feedback-form', true, 'Submitting...');
-            const formData = new FormData(event.target);
-            const rating = formData.get('rating');
-            const comments = formData.get('comments');
-            const { error } = await supabaseClient.from('feedback').insert([{ user_id: currentUserId, rating: rating ? parseInt(rating) : null, comments: comments, user_name: currentUserName }]);
-            toggleLoading('feedback-form', false, 'Submit Feedback');
-            if (error) { displayMessage(`Error submitting feedback: ${error.message}`, 'error'); console.error("Feedback error:", error); } else { displayMessage('Thank you for your feedback!', 'info'); closeFeedbackModal(); }
+
+        window.readItinerary = function() {
+            if (!currentItineraryData) return;
+            if (window.speechSynthesis.speaking) { window.speechSynthesis.cancel(); return; }
+            const text = `${currentItineraryData.title}. ${currentItineraryData.summary}.`;
+            const utter = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(utter);
         }
 
-        // --- Core API Logic (Using Serverless Function) ---
-        async function callApiProxy(payload) { const response = await fetch('/api/proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (!response.ok) { const errorData = await response.json(); throw new Error(`API Error: ${errorData.error || response.statusText}`); } return response.json(); }
-        async function generateItinerary(event) { event.preventDefault(); toggleLoading('planner-form', true, 'Generating...'); const formData = new FormData(event.target); const data = Object.fromEntries(formData.entries()); try { const result = await callApiProxy({ type: 'itinerary', data: data });
-        currentItineraryData = result; await saveCurrentItinerary(); await loadItineraries(); } catch (error) { displayMessage(`Itinerary generation failed: ${error.message}`, 'error'); } finally { toggleLoading('planner-form', false); } }
-        async function groundedSearch(event) { event.preventDefault();
-        toggleLoading('search-form', true, 'Searching...'); const query = document.getElementById('query').value; try { const result = await callApiProxy({ type: 'groundedSearch', query: query }); renderGroundedSearchResult(result);
-        } catch (error) { displayMessage(`Search failed: ${error.message}`, 'error'); } finally { toggleLoading('search-form', false); } }
-        async function generatePackingList(event) { event.preventDefault(); toggleLoading('packing-form', true, 'Creating List...'); const formData = new FormData(event.target); const data = Object.fromEntries(formData.entries()); try { const result = await callApiProxy({ type: 'packingList', data: data });
-        renderPackingList(result); } catch (error) { displayMessage(`Packing list failed: ${error.message}`, 'error'); } finally { toggleLoading('packing-form', false); } }
-        async function findFlights(event) { event.preventDefault(); toggleLoading('flights-form', true, 'Finding Flights...'); const formData = new FormData(event.target); const data = Object.fromEntries(formData.entries()); try { const result = await callApiProxy({ type: 'flights', data: data });
-        renderFlightResults(result); } catch (error) { displayMessage(`Flight search failed: ${error.message}`, 'error'); } finally { toggleLoading('flights-form', false); } }
-        async function convertCurrencyStandalone() { toggleLoading('converter-form-standalone', true, '');
-        const amount = document.getElementById('convert-amount-standalone').value, from = document.getElementById('convert-from-standalone').value, to = document.getElementById('convert-to-standalone').value;
-        try { const result = await callApiProxy({ type: 'currency', amount: amount, from: from, to: to }); document.getElementById('converter-result-standalone').textContent = result.candidates[0].content.parts[0].text;
-        } catch(error) { displayMessage(`Conversion failed: ${error.message}`, 'error'); document.getElementById('converter-result-standalone').textContent = 'Error'; } finally { toggleLoading('converter-form-standalone', false, 'Convert'); } }
+        window.toggleFavorite = async function() {
+            if (!currentItineraryId || !supabaseClient) return;
+            const btn = document.getElementById('fav-btn');
+            const isFav = btn.classList.contains('text-yellow-400');
+            
+            // Toggle UI immediately
+            if (isFav) { btn.classList.remove('text-yellow-400'); btn.classList.add('text-gray-400'); } 
+            else { btn.classList.add('text-yellow-400'); btn.classList.remove('text-gray-400'); }
+
+            const { error } = await supabaseClient.from('itineraries').update({ is_favorite: !isFav }).eq('id', currentItineraryId);
+            if (error) { 
+                displayMessage('Failed to update favorite.', 'error');
+                // Revert UI
+                if (isFav) { btn.classList.add('text-yellow-400'); } else { btn.classList.remove('text-yellow-400'); }
+            } else {
+                // Update local data
+                const item = recentItineraries.find(i => i.id === currentItineraryId);
+                if (item) item.is_favorite = !isFav;
+            }
+        }
+
+        window.downloadPDF = function() {
+            if (!currentItineraryData) return displayMessage('No itinerary to download.', 'error');
+            const element = document.getElementById('planner-content');
+            const header = document.getElementById('itinerary-header').innerHTML;
+            
+            // Create a temp container for the PDF content to style it nicely
+            const container = document.createElement('div');
+            container.innerHTML = `
+                <div style="padding: 20px; font-family: sans-serif; color: #333;">
+                    <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px;">
+                        <h1 style="color: #4f46e5; margin: 0;">TravelHub</h1>
+                        <p style="margin: 5px 0; color: #666;">Your AI Travel Itinerary</p>
+                    </div>
+                    ${header}
+                    <div style="margin-top: 20px;">
+                        ${element.innerHTML}
+                    </div>
+                    <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 10px;">
+                        Planned with <strong>TravelHub</strong> • www.planatrip.xyz
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin: 0.5,
+                filename: `${currentItineraryData.title.replace(/\s+/g, '-').toLowerCase()}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(container).save();
+        }
+
+        // --- API & Data ---
+        async function callApiProxy(payload) { const res = await fetch('/api/proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!res.ok) throw new Error((await res.json()).error || 'API Error'); return res.json(); }
         
-        // --- Rendering & Database Functions ---
-        function renderItinerary(data) {
-            const contentDiv = document.getElementById('planner-content');
-            const headerDiv = document.getElementById('itinerary-header');
-            if(!data || !data.title) { contentDiv.innerHTML = `<p class="text-gray-500 dark:text-gray-400 italic">Welcome! Please use the form above to generate a new itinerary.</p>`; headerDiv.classList.add('hidden'); headerDiv.innerHTML = ''; document.getElementById('packing-integration-section').classList.add('hidden'); document.getElementById('download-html-btn').classList.add('hidden'); document.getElementById('history-container').classList.add('hidden'); return; }
+        async function generateItinerary(e) { e.preventDefault(); toggleLoading('planner-form', true, 'Generating...'); 
+            try { 
+                const data = Object.fromEntries(new FormData(e.target).entries());
+                const res = await callApiProxy({ type: 'itinerary', data: data });
+                currentItineraryData = res; 
+                await saveCurrentItinerary(); 
+                await loadItineraries(); 
+            } catch (err) { displayMessage(err.message, 'error'); } finally { toggleLoading('planner-form', false); } 
+        }
+
+        async function saveCurrentItinerary() { if (!isUserLoggedIn || !currentItineraryData) return;
+            const { data, error } = await supabaseClient.from('itineraries').insert([{ user_id: currentUserId, data: currentItineraryData }]).select();
+            if (!error && data) currentItineraryId = data[0].id;
+        }
+
+        async function loadItineraries() { if (!isUserLoggedIn) return;
+            // Fetch is_favorite column too
+            const { data, error } = await supabaseClient.from('itineraries').select('id, created_at, data, is_favorite').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(5);
+            if (!error && data?.length) { 
+                recentItineraries = data.map(i => ({...i, data: deepSanitize(i.data)})); 
+                currentItineraryData = recentItineraries[0].data; 
+                currentItineraryId = recentItineraries[0].id;
+                renderItinerary(currentItineraryData, recentItineraries[0].is_favorite); 
+                populateHistoryDropdown(); 
+            }
+        }
+
+        function populateHistoryDropdown() { const sel = document.getElementById('itinerary-history'); if (recentItineraries.length > 1) { document.getElementById('history-container').classList.remove('hidden'); sel.innerHTML = recentItineraries.map((i, idx) => `<option value="${idx}">${i.data.title} ${i.is_favorite ? '★' : ''}</option>`).join(''); sel.onchange = (e) => { const i = recentItineraries[e.target.value]; currentItineraryData = i.data; currentItineraryId = i.id; renderItinerary(currentItineraryData, i.is_favorite); }; } else { document.getElementById('history-container').classList.add('hidden'); } }
+
+        function renderItinerary(data, isFav = false) {
+            const div = document.getElementById('planner-content'), hdr = document.getElementById('itinerary-header');
+            if(!data) { div.innerHTML = '<p class="text-gray-500 italic">Welcome! Plan a trip above.</p>'; hdr.classList.add('hidden'); hdr.innerHTML=''; document.getElementById('download-pdf-btn').classList.add('hidden'); return; }
             const { title, summary, budgetTier, bestSeasonToVisit, numberOfPeople, costPerHeadUSD, days } = deepSanitize(data);
             
-            // 1. Header Stats
-            headerDiv.innerHTML = `<h3 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100">${title}</h3><p class="text-gray-600 dark:text-gray-400 mt-2">${summary}</p><div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center"><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Budget</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${budgetTier}</dd></div><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Travelers</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${numberOfPeople}</dd></div><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Cost/Head</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">$${costPerHeadUSD}</dd></div><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Best Season</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${bestSeasonToVisit}</dd></div></div>`;
-
-            let contentHTML = '';
-
-            // 2. Transportation Banner (Using Day 1 Tip)
-            if (days && days.length > 0 && days[0].transportation_tip) {
-                const globalTip = days[0].transportation_tip;
-                contentHTML += `
-                <div class="mt-8 mb-2 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl shadow-sm flex items-start">
-                    <div class="flex-shrink-0">
-                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            // Render Header with NEW ICONS
+            hdr.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <h3 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100">${title}</h3>
+                    <div class="flex space-x-2">
+                         <button id="fav-btn" onclick="toggleFavorite()" class="${isFav ? 'text-yellow-400' : 'text-gray-400'} hover:text-yellow-500 transition"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg></button>
+                         <button onclick="shareItinerary()" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg></button>
+                         <button onclick="readItinerary()" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
                     </div>
-                    <div class="ml-3">
-                        <h4 class="text-sm font-bold text-blue-800 dark:text-blue-300">Transportation Tip</h4>
-                        <p class="mt-1 text-sm text-blue-700 dark:text-blue-200">${globalTip}</p>
-                    </div>
-                </div>`;
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">${summary}</p>
+                <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Budget</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${budgetTier}</dd></div>
+                    <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Travelers</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${numberOfPeople}</dd></div>
+                    <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Cost/Head</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">$${costPerHeadUSD}</dd></div>
+                    <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Season</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${bestSeasonToVisit}</dd></div>
+                </div>
+            `;
+
+            let html = '';
+            // Transportation Banner (Top)
+            if (days?.[0]?.transportation_tip) {
+                html += `<div class="mt-8 mb-2 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl shadow-sm flex items-start"><div class="flex-shrink-0"><svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div class="ml-3"><h4 class="text-sm font-bold text-blue-800 dark:text-blue-300">Transportation Tip</h4><p class="mt-1 text-sm text-blue-700 dark:text-blue-200">${days[0].transportation_tip}</p></div></div>`;
             }
 
-            // 3. Daily Itinerary Loop
-            if (days && Array.isArray(days)) {
-                days.forEach(day => {
-                    contentHTML += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${day.day}: ${day.theme} (${day.city})</h4><div class="mt-4 space-y-4">`;
-                    if (day.activities && Array.isArray(day.activities)) {
-                        day.activities.forEach(activity => {
-                            const crowdBadge = activity.crowdLevel ? getCrowdBadge(activity.crowdLevel) : '';
-                            const starRating = (activity.type && (activity.type.toLowerCase().includes('hotel') || activity.type.toLowerCase().includes('accommodation'))) ? `<div class="mt-2 star-rating ${getStarClass(activity.details)}"></div>` : '';
-                            
-                            contentHTML += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"><div class="flex justify-between items-start"><div class="flex items-center"><h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${activity.name}</h5><button onclick="openQaModal('${sanitizeHTML(activity.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800" title="Ask about ${sanitizeHTML(activity.name)}"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button></div><div class="text-right"><p class="font-semibold text-gray-800 dark:text-gray-100">$${activity.approxCostUSD}</p>${crowdBadge}</div></div><p class="text-sm text-gray-500 dark:text-gray-500">${activity.type}</p><p class="mt-2 text-gray-700 dark:text-gray-300">${activity.details}</p><p class="mt-2 text-xs text-gray-500 dark:text-gray-500">Address: ${activity.address}</p>${starRating}</div>`;
-                        });
-                    }
-                    if (day.transportation_tip) { contentHTML += `<div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-300 flex items-start"><svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div><strong>Transportation Tip:</strong> ${day.transportation_tip}</div></div>`; } 
-                    contentHTML += '</div></div>';
+            if (days) days.forEach(d => {
+                html += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${d.day}: ${d.theme} (${d.city})</h4><div class="mt-4 space-y-4">`;
+                if(d.activities) d.activities.forEach(a => {
+                    const st = (a.type?.toLowerCase().match(/hotel|accommodation/)) ? `<div class="mt-2 star-rating ${getStarClass(a.details)}"></div>` : '';
+                    html += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"><div class="flex justify-between items-start"><div class="flex items-center"><h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${a.name}</h5><button onclick="openQaModal('${sanitizeHTML(a.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button></div><div class="text-right"><p class="font-semibold text-gray-800 dark:text-gray-100">$${a.approxCostUSD}</p>${getCrowdBadge(a.crowdLevel)}</div></div><p class="text-sm text-gray-500 dark:text-gray-500">${a.type}</p><p class="mt-2 text-gray-700 dark:text-gray-300">${a.details}</p><p class="mt-2 text-xs text-gray-500 dark:text-gray-500">${a.address}</p>${st}</div>`;
                 });
-            }
-            
-            contentDiv.innerHTML = contentHTML;
-            headerDiv.classList.remove('hidden'); document.getElementById('packing-integration-section').classList.remove('hidden'); document.getElementById('download-html-btn').classList.remove('hidden');
-            document.getElementById('pack-destination').value = title; document.getElementById('pack-duration').value = days?.length || 7; document.getElementById('pack-season').value = bestSeasonToVisit;
-        }
-        function renderGroundedSearchResult(result) { const content = result.candidates[0].content.parts[0].text; const sources = result.candidates[0].groundingMetadata?.groundingAttributions; document.getElementById('search-title').classList.remove('hidden');
-        const searchContentDiv = document.getElementById('search-content'); searchContentDiv.innerHTML = window.marked.parse(content); if (sources && sources.length > 0) { const sourcesHtml = sources.map(source => `<li><a href="${source.web.uri}" target="_blank" class="text-blue-600 hover:underline">${source.web.title}</a></li>`).join('');
-        document.getElementById('search-sources').innerHTML = `<p class="font-semibold">Sources:</p><ul class="list-disc list-inside">${sourcesHtml}</ul>`; } else { document.getElementById('search-sources').innerHTML = ''; } }
-        function renderPackingList(result) { const content = result.candidates[0].content.parts[0].text; document.getElementById('packing-title').classList.remove('hidden');
-        const packingContentDiv = document.getElementById('packing-content'); packingContentDiv.innerHTML = window.marked.parse(content); }
-        function renderFlightResults(result) { const content = result.candidates[0].content.parts[0].text;
-        const sources = result.candidates[0].groundingMetadata?.groundingAttributions; document.getElementById('flights-title').classList.remove('hidden'); const flightsContentDiv = document.getElementById('flights-content'); flightsContentDiv.innerHTML = window.marked.parse(content);
-        if (sources && sources.length > 0) { const sourcesHtml = sources.map(source => `<li><a href="${source.web.uri}" target="_blank" class="text-blue-600 hover:underline">${source.web.title}</a></li>`).join('');
-        document.getElementById('flights-sources').innerHTML = `<p class="font-semibold">Sources:</p><ul class="list-disc list-inside">${sourcesHtml}</ul>`; } else { document.getElementById('flights-sources').innerHTML = ''; } }
-        async function saveCurrentItinerary() { if (!isUserLoggedIn || !supabaseClient || !currentItineraryData) return;
-        const { error } = await supabaseClient.from('itineraries').insert([{ user_id: currentUserId, data: currentItineraryData }]);
-        if (error) { displayMessage(`Failed to save itinerary: ${error.message}`, 'error'); console.error("Save Itinerary Error:", error); } else { displayMessage('Itinerary saved!', 'info'); } }
-        async function loadItineraries() { if (!isUserLoggedIn || !supabaseClient) return;
-        const { data, error } = await supabaseClient.from('itineraries').select('id, created_at, data').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(5);
-        if (error) { if (error.code !== 'PGRST116') { displayMessage(`Could not load trips: ${error.message}`, 'error'); } recentItineraries = []; renderItinerary(null); return; } if (data && data.length > 0) { recentItineraries = data.map(item => ({...item, data: deepSanitize(item.data)})); currentItineraryData = recentItineraries[0].data; renderItinerary(currentItineraryData); populateHistoryDropdown();
-        } else { recentItineraries = []; renderItinerary(null); } }
-        function populateHistoryDropdown() { const historyContainer = document.getElementById('history-container');
-        const historySelect = document.getElementById('itinerary-history'); if (recentItineraries.length > 1) { historyContainer.classList.remove('hidden'); historySelect.innerHTML = recentItineraries.map((item, index) => `<option value="${index}">${item.data.title}</option>`).join('');
-        historySelect.onchange = (e) => { const selectedIndex = e.target.value; currentItineraryData = recentItineraries[selectedIndex].data; renderItinerary(currentItineraryData); }; } else { historyContainer.classList.add('hidden'); } }
-        function populateCurrencies() { const fromSelect = document.getElementById('convert-from-standalone'); const toSelect = document.getElementById('convert-to-standalone');
-        CURRENCIES.forEach(c => { fromSelect.innerHTML += `<option value="${c.code}" ${c.defaultFrom ? 'selected' : ''}>${c.code} - ${c.name}</option>`; toSelect.innerHTML += `<option value="${c.code}" ${c.defaultTo ? 'selected' : ''}>${c.code} - ${c.name}</option>`; });
-        }
-        window.tryExample = function() { document.getElementById('country').value = 'France'; document.getElementById('cities').value = 'Paris';
-        document.getElementById('duration').value = '2'; document.getElementById('num-people').value = '2'; document.getElementById('budget').value = 'Moderate'; document.getElementById('accommodation-type').value = 'Hotel'; document.getElementById('trip-pace').value = 'Standard'; document.getElementById('interests').value = 'museums, cafes';
-        document.getElementById('planner-form').dispatchEvent(new Event('submit')); }
-        window.downloadHTML = function() { if (!currentItineraryData) { displayMessage('No itinerary to download.', 'error');
-        return; } const headerHTML = `<h1><strong>Travel Hub</strong></h1>` + document.getElementById('itinerary-header').innerHTML; const contentHTML = document.getElementById('planner-content').innerHTML;
-        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${sanitizeHTML(currentItineraryData.title)}</title><style>body{font-family:sans-serif;line-height:1.6;color:#333;max-width:800px;margin:20px auto;padding:20px;border:1px solid #eee;box-shadow:0 0 10px rgba(0,0,0,0.05)}h1,h2,h3,h4,h5{color:#2c3e50}</style></head><body>${headerHTML}${contentHTML}</body></html>`;
-        const blob = new Blob([fullHtml], { type: 'text/html' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${currentItineraryData.title.toLowerCase().replace(/\s+/g, '-')}-itinerary.html`;
-        document.body.appendChild(link); link.click(); document.body.removeChild(link); }
-        
-        function switchTab(panelId) {
-            ['search-panel', 'planner-panel', 'flights-panel', 'converter-panel'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
-            const panel = document.getElementById(panelId); if (panel) panel.style.display = 'block';
-            ['tab-search', 'tab-planner', 'tab-flights', 'tab-converter'].forEach(id => { const el = document.getElementById(id); if(el) { el.classList.remove('text-indigo-600', 'border-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400'); el.classList.add('text-gray-500', 'dark:text-gray-400'); } });
-            const tab = document.getElementById(`tab-${panelId.split('-')[0]}`); if(tab) { tab.classList.add('text-indigo-600', 'border-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400'); tab.classList.remove('text-gray-500', 'dark:text-gray-400'); }
-            ['nav-search', 'nav-planner', 'nav-flights', 'nav-converter'].forEach(id => { const el = document.getElementById(id); if(el) { el.classList.remove('text-indigo-600', 'dark:text-indigo-400'); el.classList.add('text-gray-500', 'dark:text-gray-400'); } });
-            const nav = document.getElementById(`nav-${panelId.split('-')[0]}`); if(nav) { nav.classList.add('text-indigo-600', 'dark:text-indigo-400'); nav.classList.remove('text-gray-500', 'dark:text-gray-400'); }
-        }
-
-        // --- Main App Initialization ---
-        async function main() {
-            if (SUPABASE_URL && SUPABASE_ANON_KEY) { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            } else { console.error("Supabase config missing!"); displayMessage("Supabase configuration is missing.", 'error'); setUIState(false); return; }
-            
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                const user = session?.user || null;
-                isUserLoggedIn = !!user;
-                currentUserId = user?.id || 'anonymous_user';
-                currentUserName = user?.user_metadata?.full_name || user?.email || 'Anonymous';
-                setUIState(isUserLoggedIn); 
-                if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && user) { if (event === 'SIGNED_IN') { displayMessage(`Welcome back, ${currentUserName}!`, 'info'); } loadItineraries(); }
+                html += '</div></div>';
             });
+            div.innerHTML = html;
+            hdr.classList.remove('hidden'); document.getElementById('packing-integration-section').classList.remove('hidden'); document.getElementById('download-pdf-btn').classList.remove('hidden');
+            document.getElementById('pack-destination').value = title; document.getElementById('pack-duration').value = days?.length||3; document.getElementById('pack-season').value = bestSeasonToVisit;
+        }
 
+        async function handleFeedbackSubmit(e) { e.preventDefault(); if(!isUserLoggedIn) return displayMessage('Login required', 'error'); toggleLoading('feedback-form', true, 'Sending...'); const fd = new FormData(e.target); const { error } = await supabaseClient.from('feedback').insert([{ user_id: currentUserId, rating: parseInt(fd.get('rating')||0), comments: fd.get('comments'), user_name: currentUserName }]); toggleLoading('feedback-form', false, 'Submit'); if(error) displayMessage('Error sending feedback', 'error'); else { displayMessage('Feedback sent!', 'info'); closeFeedbackModal(); } }
+        async function handleQaSubmit(e) { e.preventDefault(); toggleLoading('qa-form', true, 'Thinking...'); const d = document.getElementById('qa-answer'); d.innerHTML=''; document.getElementById('qa-answer-container').classList.remove('hidden'); try { const res = await callApiProxy({ type: 'contextualQa', context: document.getElementById('qa-context').textContent, question: document.getElementById('qa-question').value }); d.innerHTML = marked.parse(res.candidates[0].content.parts[0].text); } catch(err) { d.innerHTML='Error fetching answer.'; } finally { toggleLoading('qa-form', false, 'Get Answer'); } }
+        
+        // Init
+        async function main() {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseClient.auth.onAuthStateChange((e, s) => { isUserLoggedIn = !!s?.user; if(isUserLoggedIn) { currentUserId = s.user.id; currentUserName = s.user.user_metadata?.full_name; displayMessage(`Welcome ${currentUserName}`); loadItineraries(); } setUIState(isUserLoggedIn); });
             document.getElementById('magic-link-form').addEventListener('submit', initiateMagicLink);
             document.getElementById('qa-form').addEventListener('submit', handleQaSubmit);
-            document.querySelector('#qa-modal .modal-content').addEventListener('click', (e) => e.stopPropagation());
-            document.getElementById('qa-modal').addEventListener('click', closeQaModal);
             document.getElementById('feedback-form').addEventListener('submit', handleFeedbackSubmit);
-            document.querySelector('#feedback-modal .modal-content').addEventListener('click', (e) => e.stopPropagation());
-            document.getElementById('feedback-modal').addEventListener('click', closeFeedbackModal);
             document.getElementById('planner-form').addEventListener('submit', generateItinerary);
-            document.getElementById('search-form').addEventListener('submit', groundedSearch);
-            document.getElementById('packing-form').addEventListener('submit', generatePackingList);
-            document.getElementById('flights-form').addEventListener('submit', findFlights);
-            document.getElementById('convert-btn-standalone').onclick = convertCurrencyStandalone;
-
+            document.getElementById('search-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('search-form', true, 'Searching...'); try { const res = await callApiProxy({ type: 'groundedSearch', query: document.getElementById('query').value }); document.getElementById('search-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('search-title').classList.remove('hidden'); } catch(e){displayMessage('Search failed','error')} finally { toggleLoading('search-form', false); } });
+            document.getElementById('packing-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('packing-form', true, 'Packing...'); try { const res = await callApiProxy({ type: 'packingList', data: Object.fromEntries(new FormData(e.target).entries()) }); document.getElementById('packing-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('packing-title').classList.remove('hidden'); } catch(e){} finally { toggleLoading('packing-form', false); } });
+            document.getElementById('flights-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('flights-form', true, 'Flying...'); try { const res = await callApiProxy({ type: 'flights', data: Object.fromEntries(new FormData(e.target).entries()) }); document.getElementById('flights-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('flights-title').classList.remove('hidden'); } catch(e){} finally { toggleLoading('flights-form', false); } });
+            document.getElementById('convert-btn-standalone').onclick = async () => { toggleLoading('converter-form-standalone', true, ''); try { const res = await callApiProxy({ type: 'currency', amount: document.getElementById('convert-amount-standalone').value, from: document.getElementById('convert-from-standalone').value, to: document.getElementById('convert-to-standalone').value }); document.getElementById('converter-result-standalone').textContent = res.candidates[0].content.parts[0].text; } catch(e){} finally { toggleLoading('converter-form-standalone', false, 'Convert'); } };
+            
             switchTab('planner-panel');
-            populateCurrencies();
-
-            // Set initial state of the dark mode button icon
-            const isCurrentlyDark = document.documentElement.classList.contains('dark');
-            setDarkMode(isCurrentlyDark);
+            CURRENCIES.forEach(c => { const o = `<option value="${c.code}">${c.code} - ${c.name}</option>`; document.getElementById('convert-from-standalone').innerHTML += o; document.getElementById('convert-to-standalone').innerHTML += o; });
+            document.getElementById('convert-from-standalone').value = 'USD'; document.getElementById('convert-to-standalone').value = 'EUR';
+            setDarkMode(document.documentElement.classList.contains('dark'));
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
         }
-
-        // Register Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker: Registered', reg))
-                    .catch(err => console.log('Service Worker: Registration Error', err));
-            });
-        }
-
         document.addEventListener('DOMContentLoaded', main);
     </script>
 </body>
