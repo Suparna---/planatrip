@@ -1,0 +1,9 @@
+{
+  "name": "travel-hub",
+  "version": "1.0.0",
+  "description": "AI Travel Planner",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

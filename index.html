@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<!-- The 'dark' class will be added here by JS -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Travel Planner & Research Hub</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/4f46e5/ffffff?text=TH">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 
+      NEW: Dark Mode Config & Flicker Prevention
+      1. This runs *before* the page loads to set the theme from localStorage.
+      2. It also configures Tailwind to use the 'class' strategy for dark mode.
+    -->
+    <script>
+        // Set theme from localStorage to prevent FOUC (Flash of Unstyled Content)
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        // Configure Tailwind
+        tailwind.config = {
+            darkMode: 'class', // This is the crucial part
+            theme: {
+                extend: {
+                    // You can add custom theme colors here if needed
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        /*
+          NEW: Dark Mode Styles
+          - Added dark mode background color
+        */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f7f9fb; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .dark body {
+            background-color: #030712; /* Tailwind gray-950 */
+        }
+        .app-locked { filter: blur(5px); pointer-events: none; transition: filter 0.3s ease; }
+        .container-shadow { 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); 
+            transition: box-shadow 0.3s ease;
+        }
+        .dark .container-shadow {
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.1); /* Indigo shadow */
+        }
+        .loading-ring { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255, 255, 255, 0.5); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
+        .loading-ring-small { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(126, 34, 206, 0.5); border-radius: 50%; border-top-color: #6366f1; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.19, 1, 0.22, 1), padding 0.3s ease-in-out, background-color 0.3s, border-color 0.3s; }
+        .accordion-content.open { max-height: 9999px; padding-top: 1rem; }
+        .star-rating { color: transparent; text-shadow: 0 0 0 #facc15; }
+        .star-rating::before { content: '★★★★★'; font-size: 1.25rem; }
+        .stars-5::before { content: '★★★★★'; } .stars-4::before { content: '★★★★☆'; } .stars-3::before { content: '★★★☆☆'; } .stars-2::before { content: '★★☆☆☆'; } .stars-1::before { content: '★☆☆☆☆'; } .stars-0::before { content: '☆☆☆☆☆'; }
+        
+        .mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; }
+        
+        .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background-color: white; padding: 2rem; border-radius: 0.75rem; max-width: 90%; width: 500px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); animation: fadeIn 0.3s ease-out; }
+        .dark .modal-content { background-color: #1f2937; /* gray-800 */ }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .prose h1, .prose h2, .prose h3 { font-weight: 700; color: #374151; } .prose ul { list-style-type: disc; padding-left: 1.5rem; } .prose li { margin-bottom: 0.5rem; }
+        .dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #f3f4f6; /* gray-100 */ }
+        .dark .prose { color: #d1d5db; /* gray-300 */ }
+
+        #qa-answer-container, #feedback-comments { max-height: 40vh; overflow-y: auto; }
+        
+        /* Feedback Star Rating */
+        .rating-stars { display: inline-flex; flex-direction: row-reverse; }
+        .rating-stars input { display: none; }
+        .rating-stars label {
+            color: #d1d5db; /* gray-300 */
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .dark .rating-stars label {
+            color: #4b5563; /* gray-600 */
+        }
+        .rating-stars input:checked ~ label,
+        .rating-stars label:hover,
+        .rating-stars label:hover ~ label {
+            color: #facc15; /* yellow-400 */
+        }
+        .dark .rating-stars input:checked ~ label,
+        .dark .rating-stars label:hover,
+        .dark .rating-stars label:hover ~ label {
+            color: #facc15; /* yellow-400 */
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 dark:bg-gray-950">
+    
+    <div id="app-container">
+        <div class="max-w-4xl mx-auto pb-24">
+            <!-- Header -->
+            <div class="relative mb-4 flex flex-col sm:flex-row sm:justify-between items-center pt-2 pb-4">
+                <!-- Centered Title and Subtitle -->
+                <div class="flex flex-col justify-center items-center text-center">
+                    <h1 class="text-4xl font-extrabold text-gray-900 dark:text-gray-100 flex items-center justify-center">
+                        <!-- New Plane Icon (Indigo fill, Red border) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="h-10 w-10 mr-2">
+                            <path fill="#4f46e5" stroke="red" stroke-width="2" d="M 50 30 L 70 75 L 50 55 L 30 75 L 50 30 Z" />
+                            <polygon fill="#4f46e5" points="50,33 50.8,55 49.2,55" />
+                        </svg>
+                        <span class="text-indigo-600">Travel</span>
+                        <span class="text-red-600 ml-2">Hub</span>
+                    </h1>
+                    <p class="text-center text-gray-500 dark:text-gray-400 text-base mt-1">Plan a trip...</p>
+                </div>
+                
+                <!-- 
+                  NEW: Dark Mode Button Added
+                  - Buttons are in a container for better layout.
+                -->
+                <div class="flex items-center flex-shrink-0 h-10 mt-4 sm:absolute sm:top-2 sm:right-0 sm:mt-0">
+                    <button id="feedback-btn" onclick="openFeedbackModal()" class="ml-2 flex items-center justify-center h-9 px-2 py-1 border border-indigo-600 rounded-lg shadow-sm text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-gray-700 focus:outline-none transition duration-150 ease-in-out" title="Provide Feedback">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-4 0H9v2h2V9z" clip-rule="evenodd"></path></svg>
+                        <span class="hidden md:inline ml-2">Feedback</span>
+                    </button>
+                    
+                    <!-- LOGIN BUTTON (MOVED UP) -->
+                    <button id="login-btn" onclick="handleLoginClick()" class="ml-2 flex items-center justify-center h-9 px-3 py-1 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                        <span id="login-text">Login</span>
+                    </button>
+                    
+                    <!-- DARK MODE TOGGLE (MOVED DOWN) -->
+                    <button id="dark-mode-toggle" onclick="toggleDarkMode()" class="ml-2 flex items-center justify-center h-9 w-9 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition duration-150 ease-in-out" title="Toggle dark mode">
+                        <!-- Sun Icon -->
+                        <svg id="theme-icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <!-- Moon Icon -->
+                        <svg id="theme-icon-moon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    
+                    </button>
+
+                    <!-- THIS IS THE DUPLICATE BUTTON THAT IS BEING REMOVED -->
+                </div>
+            </div>
+            
+            <!-- Desktop Tab Navigation -->
+            <div class="hidden md:flex border-b border-gray-200 dark:border-gray-700 mb-8 justify-center">
+                <button id="tab-search" onclick="switchTab('search-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg"><span class="inline-block w-6 h-6 mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></span>Travel Research</button>
+                <button id="tab-planner" onclick="switchTab('planner-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg"><span class="inline-block w-6 h-6 mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>AI Travel Planner</button>
+                <button id="tab-flights" onclick="switchTab('flights-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg"><span class="inline-block w-6 h-6 mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></span>Flight Search</button>
+                <button id="tab-converter" onclick="switchTab('converter-panel')" class="py-3 px-6 text-lg font-medium border-b-4 border-transparent text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-600 dark:hover:border-indigo-400 transition duration-200 focus:outline-none rounded-t-lg"><span class="inline-block w-6 h-6 mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></span>Currency Converter</button>
+            </div>
+
+      
+            <div id="content-area" class="w-full">
+                <!-- Search Panel -->
+                <div id="search-panel" class="hidden bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-6 md:p-8 rounded-xl container-shadow">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700"><span class="inline-block w-6 h-6 mr-2"><svg class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></span>Travel Research & Search</h2>
+                    <form id="search-form" class="space-y-4">
+                        <div>
+                            <label for="query" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Search Query</label>
+                            <div class="mt-1 relative rounded-lg shadow-sm">
+                                <input type="text" id="query" name="query" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder:text-gray-500 focus:border-indigo-500 focus:ring-indigo-500 p-3 border pr-10" placeholder="e.g., Top 5 restaurants in Paris" oninput="toggleClearButton(this)">
+                                <button type="button" id="clear-search-btn" onclick="clearSearchInput()" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden focus:outline-none" aria-label="Clear search input"><svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                            </div>
+                        </div>
+                        <button type="submit" id="search-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition disabled:bg-indigo-400">Search Web for Facts</button>
+                    </form>
+                    <div id="search-output" class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 hidden" id="search-title">Search Results</h3>
+                        <div id="search-content" class="prose max-w-none text-gray-700 dark:text-gray-300"><p class="text-gray-500 dark:text-gray-400 italic">Enter a query above to find real-time travel information.</p></div>
+                        <div id="search-sources" class="mt-4 text-xs text-gray-500 dark:text-gray-500"></div>
+                    </div>
+                </div>
+
+                <!-- Planner Panel -->
+                <div id="planner-panel" class="hidden bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-6 md:p-8 rounded-xl container-shadow">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700"><span class="inline-block w-6 h-6 mr-2"><svg class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>AI Travel Planner</h2>
+                    <form id="planner-form" class="space-y-4 mb-8">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><label for="country" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Country</label><input type="text" id="country" name="country" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Italy"></div>
+                            
+                            <!-- === REVERTED CODE START === -->
+                            <div class="md:col-span-2"><label for="cities" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cities</label><input type="text" id="cities" name="cities" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Rome, Florence"></div>
+                            <!-- === REVERTED CODE END === -->
+
+                        </div>
+                        <div class="grid grid-cols-3 md:grid-cols-5 gap-4">
+                            <div><label for="duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</label><input type="number" id="duration" name="duration" required min="1" max="30" value="7" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
+                            <div><label for="num-people" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Travelers</label><input type="number" id="num-people" name="num-people" required min="1" max="10" value="2" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
+                            <div class="col-span-1 md:col-span-3"><label for="budget" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Budget</label><select id="budget" name="budget" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white"><option value="Low Budget">Low Budget</option><option value="Moderate" selected>Moderate</option><option value="Extravagance">Extravagance</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="accommodation-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Accommodation</label><select id="accommodation-type" name="accommodation-type" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white"><option value="Hotel" selected>Hotels</option><option value="Hostel">Hostels</option><option value="Airbnb/Rental">Airbnb/Rental</option><option value="Homestead/Boutique">Boutique Stays</option></select></div>
+                            <div><label for="trip-pace" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Trip Pace</label><select id="trip-pace" name="trip-pace" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white"><option value="Standard" selected>Standard</option><option value="Jam-Packed">Jam-Packed</option><option value="Leisure">Leisure</option></select></div>
+                        </div>
+                        <div><label for="interests" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Interests</label><input type="text" id="interests" name="interests" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., history, hiking"></div>
+                        <button type="button" id="example-btn" onclick="tryExample()" class="w-full flex justify-center items-center py-3 px-4 border border-indigo-600 dark:border-indigo-700 rounded-lg shadow-sm text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition"><span class="inline-block w-4 h-4 mr-2"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></span>Try Paris Example</button>
+                        <button type="submit" id="plan-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition disabled:bg-indigo-400">Generate Itinerary</button>
+                    </form>
+                    <div id="planner-output" class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                        <div id="history-container" class="hidden mb-6">
+                            <label for="itinerary-history" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Recent Itineraries</label>
+                            <select id="itinerary-history" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white"></select>
+                        </div>
+                        <div id="itinerary-header" class="hidden"></div>
+                        <div id="planner-content"><p class="text-gray-500 dark:text-gray-400 italic">Please log in to generate and save your itineraries.</p></div>
+                        <div id="packing-integration-section" class="hidden mt-10 pt-6 border-t border-gray-100 dark:border-gray-700">
+                            <button id="pack-accordion-btn" onclick="toggleAccordion('packing-list-section')" class="flex justify-between items-center w-full p-4 text-left bg-indigo-50 dark:bg-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-900 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-md"><div class="flex items-center"><span class="inline-block w-6 h-6 mr-3 text-indigo-600 dark:text-indigo-400"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 11v10"></path></svg></span><span class="text-xl font-bold text-indigo-700 dark:text-indigo-400">4. Generate Packing List</span></div><span id="icon-packing-list-section"><svg class="w-5 h-5 transition-transform text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></span></button>
+                            <div id="content-packing-list-section" class="accordion-content">
+                                <div class="p-4 md:p-6 bg-white dark:bg-gray-800 rounded-b-xl border border-gray-200 dark:border-gray-700 shadow-lg -mt-1">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">The form below is pre-filled from your itinerary.</p>
+                                    <form id="packing-form" class="space-y-4 mb-8">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div><label for="pack-destination" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Destination</label><input type="text" id="pack-destination" name="pack-destination" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
+                                            <div><label for="pack-duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</LabeL><input type="number" id="pack-duration" name="pack-duration" required min="1" max="60" value="7" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
+                                        </div>
+                                        <div><label for="pack-season" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Season</label><input type="text" id="pack-season" name="pack-season" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
+                                        <div><label for="pack-activities" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Activities</label><input type="text" id="pack-activities" name="pack-activities" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., formal dinner, hiking"></div>
+                                        <button type="submit" id="pack-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:bg-indigo-400">Generate Packing List</button>
+                                    </form>
+                                    <div id="packing-output" class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                                        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 hidden" id="packing-title">Your Packing List</h3>
+                                        <div id="packing-content" class="prose max-w-none text-gray-700 dark:text-gray-300"><p class="text-gray-500 dark:text-gray-400 italic">Generate a list above.</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="download-html-btn" onclick="downloadHTML()" class="hidden mt-6 w-full py-3 px-4 rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition"><span class="inline-block w-4 h-4 mr-1"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></span>Download Itinerary</button>
+                    </div>
+                </div>
+
+                <!-- Flights Panel -->
+                <div id="flights-panel" class="hidden bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-6 md:p-8 rounded-xl container-shadow">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700"><span class="inline-block w-6 h-6 mr-2"><svg class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></span>AI Flight Search</h2>
+                    <form id="flights-form" class="space-y-4 mb-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="flight-origin" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Origin</label><input type="text" id="flight-origin" name="flight-origin" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., London, LHR"></div>
+                            <div><label for="flight-destination" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Destination</label><input type="text" id="flight-destination" name="flight-destination" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Tokyo, HND"></div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><label for="flight-depart-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Departure</label><input type="date" id="flight-depart-date" name="flight-depart-date" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
+                            <div><label for="flight-return-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Return</label><input type="date" id="flight-return-date" name="flight-return-date" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
+                            <div><label for="flight-travelers" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Travelers</label><input type="number" id="flight-travelers" name="flight-travelers" required min="1" max="10" value="1" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
+                            <div><label for="flight-cabin" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cabin</label><select id="flight-cabin" name="flight-cabin" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white"><option value="Economy" selected>Economy</option><option value="Premium Economy">Premium</option><option value="Business">Business</option><option value="First">First</option></select></div>
+                        </div>
+                        <button type="submit" id="flights-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:bg-indigo-400">Find Cheapest Flights</button>
+                    </form>
+                    <div id="flights-output" class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 hidden" id="flights-title">Flight Results</h3>
+                        <div id="flights-content" class="prose max-w-none text-gray-700 dark:text-gray-300"><p class="text-gray-500 dark:text-gray-400 italic">Enter your flight details above to find the best prices.</p></div>
+                        <div id="flights-sources" class="mt-4 text-xs text-gray-500 dark:text-gray-500"></div>
+                    </div>
+                </div>
+
+                <!-- Converter Panel -->
+                <div id="converter-panel" class="hidden bg-white dark:bg-gray-800 dark:border dark:border-gray-700 p-6 md:p-8 rounded-xl container-shadow">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-indigo-400 mb-6 border-b pb-3 border-gray-100 dark:border-gray-700"><span class="inline-block w-6 h-6 mr-2"><svg class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></span>Currency Converter</h2 >
+                    <div class="space-y-4">
+                        <div>
+                            <label for="convert-amount-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                            <input type="number" id="convert-amount-standalone" value="100" min="1" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border text-gray-800 focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                            <div>
+                                <label for="convert-from-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">From</label>
+                                <select id="convert-from-standalone" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white text-gray-800 focus:border-indigo-500 focus:ring-indigo-500"></select>
+                            </div>
+                            <div>
+                                <label for="convert-to-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">To</label>
+                                <select id="convert-to-standalone" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white text-gray-800 focus:border-indigo-500 focus:ring-indigo-500"></select>
+                            </div>
+                        </div>
+                        <div class="flex items-end space-x-4">
+                            <div class="flex-1">
+                                <label for="converter-result-standalone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Converted Amount</label>
+                                <div id="converter-result-standalone" class="mt-1 w-full text-lg font-bold text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 p-3 rounded-lg border border-gray-300 dark:border-gray-600">
+                                    -
+                                </div>
+                            </div>
+                            <button id="convert-btn-standalone" onclick="convertCurrencyStandalone()" class="flex-shrink-0 h-12 py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:bg-indigo-400">
+                                Convert
+                            </button>
+                        </div>
+                        <div id="converter-loading-standalone" class="hidden text-center py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                            <span class="loading-ring-small mr-2"></span> Fetching live exchange rate...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mb-4 border-b pb-2 border-gray-100 dark:border-gray-700">Login / Sign Up</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Enter your details for a passwordless magic link. Your itineraries will be saved securely.</p>
+            <form id="magic-link-form" class="space-y-4">
+                <div><label for="auth-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Your Name</label><input type="text" id="auth-name" name="auth-name" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Jane Doe"></div>
+                <div><label for="auth-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label><input type="email" id="auth-email" name="auth-email" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="you@example.com"></div>
+                <button type="submit" id="magic-link-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Send Magic Link</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Q&A Modal -->
+    <div id="qa-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Ask a Question</h3>
+                <button onclick="closeQaModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">About: <strong id="qa-context"></strong></p>
+            <form id="qa-form" class="space-y-4">
+                <input type="text" id="qa-question" name="qa-question" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., What is the dress code?">
+                <button type="submit" id="qa-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Get Answer</button>
+            </form>
+            <div id="qa-answer-container" class="mt-4 pt-4 border-t dark:border-gray-700 hidden">
+                 <div id="qa-answer" class="prose max-w-none text-gray-700 dark:text-gray-300 text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Provide Feedback</h3>
+                <button onclick="closeFeedbackModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">We'd love to know what you think! Your feedback helps us improve.</p>
+            <form id="feedback-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Overall, how was your experience?</label>
+                    <div class="rating-stars">
+                        <input type="radio" id="star5" name="rating" value="5"><label for="star5" title="5 stars">★</label>
+                        <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4 stars">★</label>
+                        <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3 stars">★</label>
+                        <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2 stars">★</label>
+                        <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1 star">★</label>
+                    </div>
+                </div>
+                <div>
+                    <label for="feedback-comments" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Comments, bugs, or suggestions?</label>
+                    <textarea id="feedback-comments" name="comments" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="What did you like? What could be better?"></textarea>
+                </div>
+                <button type="submit" id="feedback-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Submit Feedback</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-nav md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg">
+        <div class="max-w-4xl mx-auto flex justify-around">
+            <button id="nav-search" onclick="switchTab('search-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition duration-200 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <span class="text-xs font-medium">Research</span>
+            </button>
+            <button id="nav-planner" onclick="switchTab('planner-panel')" class="flex flex-col items-center justify-center p-3 text-indigo-600 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition duration-200 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="text-xs font-medium">Planner</span>
+            </button>
+            <button id="nav-flights" onclick="switchTab('flights-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition duration-200 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                <span class="text-xs font-medium">Flights</span>
+            </button>
+            <button id="nav-converter" onclick="switchTab('converter-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition duration-200 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span class="text-xs font-medium">Currency</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- App Logic -->
+    <script>
+        // --- Globals & Constants ---
+        let currentItineraryData = null, recentItineraries = [];
+        const SUPABASE_URL = 'https://omwqfqzcighrmqoogmxj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9td3FmcXpjaWdocm1xb29nbXhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2NTQwNzYsImV4cCI6MjA3NjIzMDA3Nn0.pVPKedBrEBj3QNsc5eELj8ARWvuqfAyyWIuwS6RWsHk';
+        
+        let supabaseClient = null, isUserLoggedIn = false, currentUserId = 'anonymous_user', currentUserName = 'Anonymous';
+        
+        const CURRENCIES = [ { code: "USD", name: "US Dollar", defaultFrom: true }, { code: "EUR", name: "Euro", defaultTo: true }, { code: "GBP", name: "British Pound" }, { code: "JPY", name: "Japanese Yen" }, { code: "CAD", name: "Canadian Dollar" }, { code: "AUD", name: "Australian Dollar" }, { code: "CHF", name: "Swiss Franc" }, { code: "CNY", name: "Chinese Yuan" }, { code: "INR", name: "Indian Rupee" }, { code: "HKD", name: "Hong Kong Dollar" }, { code: "NZD", name: "New Zealand Dollar" }, { code: "SEK", name: "Swedish Krona" }, { code: "KRW", name: "South Korean Won" }, { code: "SGD", name: "Singapore Dollar" }, { code: "NOK", name: "Norwegian Krone" }, { code: "MXN", name: "Mexican Peso" }, { code: "RUB", name: "Russian Ruble" }, { code: "ZAR", name: "South African Rand" }, { code: "TRY", name: "Turkish Lira" }, { code: "BRL", name: "Brazilian Real" } ];
+        
+        // --- NEW: Dark Mode Functions ---
+        /**
+         * Applies the theme and updates the toggle button icon.
+         * @param {boolean} isDark - True to apply dark mode, false for light mode.
+         */
+        function setDarkMode(isDark) {
+            const sunIcon = document.getElementById('theme-icon-sun');
+            const moonIcon = document.getElementById('theme-icon-moon');
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                if (sunIcon) sunIcon.classList.remove('hidden');
+                if (moonIcon) moonIcon.classList.add('hidden');
+                localStorage.theme = 'dark';
+            } else {
+                document.documentElement.classList.remove('dark');
+                if (sunIcon) sunIcon.classList.add('hidden');
+                if (moonIcon) moonIcon.classList.remove('hidden');
+                localStorage.theme = 'light';
+            }
+        }
+
+        /**
+         * Toggles the current color mode between light and dark.
+         */
+        window.toggleDarkMode = function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            setDarkMode(!isDark);
+        }
+
+        // --- Utility & UI Functions ---
+        function sanitizeHTML(str) { if (typeof str !== 'string') return str; const temp = document.createElement('div'); temp.textContent = str; return temp.innerHTML; }
+        function deepSanitize(data) { if (data === null || data === undefined) { return data; } if (Array.isArray(data)) { return data.map(item => deepSanitize(item)); } if (typeof data === 'object') { const sanitizedObject = {}; for (const key in data) { if (Object.prototype.hasOwnProperty.call(data, key)) { sanitizedObject[key] = deepSanitize(data[key]); } } return sanitizedObject; } if (typeof data === 'string') { return sanitizeHTML(data); } return data; }
+        function setUIState(isLoggedIn) {
+            const appContainer = document.getElementById('app-container');
+            const loginModal = document.getElementById('login-modal');
+            const loginText = document.getElementById('login-text');
+            const feedbackBtn = document.getElementById('feedback-btn');
+            
+            loginText.textContent = isLoggedIn ? 'Logout' : 'Login';
+            document.getElementById('login-btn').classList.toggle('bg-red-600', isLoggedIn);
+            document.getElementById('login-btn').classList.toggle('hover:bg-red-700', isLoggedIn);
+            
+            if (isLoggedIn) {
+                appContainer.classList.remove('app-locked');
+                loginModal.style.display = 'none';
+                feedbackBtn.style.display = 'flex'; // Show feedback button when logged in
+            } else {
+                appContainer.classList.add('app-locked');
+                loginModal.style.display = 'flex';
+                feedbackBtn.style.display = 'none'; // Hide feedback button when logged out
+                currentItineraryData = null;
+                recentItineraries = [];
+                renderItinerary(null);
+            }
+        }
+        window.handleLoginClick = async function() { if (!supabaseClient) return; if (isUserLoggedIn) { await supabaseClient.auth.signOut(); } }
+        window.initiateMagicLink = async function(event) { event.preventDefault(); const email = document.getElementById('auth-email').value, name = document.getElementById('auth-name').value; if (!email || !name) { displayMessage('Please enter name and email.', 'error'); return; } toggleLoading('magic-link-form', true, 'Sending...'); const { error } = await supabaseClient.auth.signInWithOtp({ email: email, options: { data: { full_name: name } } });
+        toggleLoading('magic-link-form', false); if (error) { displayMessage(`Auth Error: ${error.message}`, 'error'); } else { document.getElementById('login-modal').style.display = 'none'; displayMessage(`Magic link sent to ${email}.`, 'info'); } }
+        
+        function displayMessage(message, type = 'info') { const existing = document.getElementById('status-message'); if (existing) existing.remove(); const msgElement = document.createElement('div'); msgElement.id = 'status-message'; msgElement.className = `p-3 fixed top-4 left-1/2 transform -translate-x-1/2 z-[1001] text-sm rounded-lg shadow-xl ${type === 'error' ? 'bg-red-600' : 'bg-blue-600'} text-white transition-all`; msgElement.style.opacity = '1'; document.body.appendChild(msgElement); msgElement.textContent = message; setTimeout(() => { msgElement.style.opacity = '0'; setTimeout(() => msgElement.remove(), 500); }, 5000); }
+        function toggleLoading(formId, isLoading, statusText = 'Loading...') { const ids = { 'planner-form': { btn: 'plan-btn', text: 'Generate Itinerary', ex: 'example-btn' }, 'search-form': { btn: 'search-btn', text: 'Search Web for Facts' }, 'packing-form': { btn: 'pack-btn', text: 'Generate Packing List' }, 'flights-form': { btn: 'flights-btn', text: 'Find Cheapest Flights' }, 'converter-form-standalone': { btn: 'convert-btn-standalone', text: 'Convert' }, 'magic-link-form': { btn: 'magic-link-btn', text: 'Send Magic Link' }, 'qa-form': {btn: 'qa-submit-btn', text: 'Get Answer'}, 'feedback-form': {btn: 'feedback-submit-btn', text: 'Submit Feedback'} };
+        const config = ids[formId]; if (!config) return; const button = document.getElementById(config.btn); const exampleBtn = config.ex ? document.getElementById(config.ex) : null;
+        button.disabled = isLoading; if (exampleBtn) exampleBtn.disabled = isLoading; button.innerHTML = isLoading ? `<span class="loading-ring mr-2"></span> ${statusText}` : config.text; }
+        window.toggleAccordion = function(id) { document.getElementById(`content-${id}`).classList.toggle('open'); document.getElementById(`icon-${id}`).querySelector('svg').style.transform = document.getElementById(`content-${id}`).classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)'; }
+        
+        // === FIX START ===
+        // The original code was garbled here. This is the correct function.
+        function getCrowdBadge(level) { 
+            if (typeof level !== 'string' || !level) return ''; 
+            const l = level.toLowerCase(); 
+            const c = { 
+                high: 'bg-red-100 text-red-700', 
+                moderate: 'bg-yellow-100 text-yellow-700', 
+                low: 'bg-green-100 text-green-700' 
+            };
+            return `<span class="inline-block whitespace-nowrap px-2 py-1 text-xs font-semibold rounded-full ${c[l]||'bg-gray-200'}">Crowd: ${level.charAt(0).toUpperCase()+level.slice(1)}</span>`; 
+        }
+        // === FIX END ===
+
+        function getStarClass(details) { if (typeof details !== 'string') return ''; const m = details.match(/(\d)-star/i); return `stars-${m?Math.min(5,Math.max(0,parseInt(m[1]))):0}`; }
+        
+        // --- Contextual Q&A Modal ---
+        window.openQaModal = function(context) { document.getElementById('qa-modal').classList.remove('hidden'); document.getElementById('qa-context').textContent = context; document.getElementById('qa-question').value = ''; document.getElementById('qa-answer-container').classList.add('hidden'); document.getElementById('qa-answer').innerHTML = ''; }
+        window.closeQaModal = function() { document.getElementById('qa-modal').classList.add('hidden'); }
+        async function handleQaSubmit(event) {
+            event.preventDefault();
+            const question = document.getElementById('qa-question').value;
+            const context = document.getElementById('qa-context').textContent;
+            const answerContainer = document.getElementById('qa-answer-container');
+            const answerDiv = document.getElementById('qa-answer');
+            toggleLoading('qa-form', true, 'Finding answer...');
+            answerContainer.classList.remove('hidden');
+            answerDiv.innerHTML = '<div class="flex justify-center items-center"><span class="loading-ring-small"></span></div>';
+            try {
+                const result = await callApiProxy({ type: 'contextualQa', context: context, question: question });
+                answerDiv.innerHTML = marked.parse(result.candidates[0].content.parts[0].text);
+            } catch (error) {
+                answerDiv.innerHTML = `<p class="text-red-600">Sorry, I couldn't find an answer.</p>`;
+                displayMessage(error.message, 'error');
+            } finally {
+                toggleLoading('qa-form', false, 'Get Answer');
+            }
+        }
+        
+        // --- Feedback Modal ---
+        window.openFeedbackModal = function() {
+            if (!isUserLoggedIn) {
+                displayMessage('Please log in to provide feedback.', 'error');
+                return;
+            }
+            document.getElementById('feedback-modal').classList.remove('hidden');
+            document.getElementById('feedback-form').reset();
+        }
+        window.closeFeedbackModal = function() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+        }
+        async function handleFeedbackSubmit(event) {
+            event.preventDefault();
+            if (!isUserLoggedIn || !supabaseClient) {
+                displayMessage('You must be logged in to submit feedback.', 'error');
+                return;
+            }
+            toggleLoading('feedback-form', true, 'Submitting...');
+            const formData = new FormData(event.target);
+            const rating = formData.get('rating');
+            const comments = formData.get('comments');
+            
+            const { error } = await supabaseClient
+                .from('feedback')
+                .insert([
+                    { 
+                        user_id: currentUserId, 
+                        rating: rating ? parseInt(rating) : null,
+                        comments: comments,
+                        user_name: currentUserName
+                    }
+                ]);
+                
+            toggleLoading('feedback-form', false, 'Submit Feedback');
+
+            if (error) {
+                displayMessage(`Error submitting feedback: ${error.message}`, 'error');
+                console.error("Feedback error:", error);
+            } else {
+                displayMessage('Thank you for your feedback!', 'info');
+                closeFeedbackModal();
+            }
+        }
+
+        // --- Core API Logic (Using Serverless Function) ---
+        async function callApiProxy(payload) { const response = await fetch('/api/proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!response.ok) { const errorData = await response.json(); throw new Error(`API Error: ${errorData.error || response.statusText}`); } return response.json(); }
+        async function generateItinerary(event) { event.preventDefault(); toggleLoading('planner-form', true, 'Generating...'); const formData = new FormData(event.target); const data = Object.fromEntries(formData.entries()); try { const result = await callApiProxy({ type: 'itinerary', data: data });
+        currentItineraryData = result; await saveCurrentItinerary(); await loadItineraries(); } catch (error) { displayMessage(`Itinerary generation failed: ${error.message}`, 'error'); } finally { toggleLoading('planner-form', false); } }
+        async function groundedSearch(event) { event.preventDefault();
+        toggleLoading('search-form', true, 'Searching...'); const query = document.getElementById('query').value; try { const result = await callApiProxy({ type: 'groundedSearch', query: query }); renderGroundedSearchResult(result);
+        } catch (error) { displayMessage(`Search failed: ${error.message}`, 'error'); } finally { toggleLoading('search-form', false); } }
+        async function generatePackingList(event) { event.preventDefault(); toggleLoading('packing-form', true, 'Creating List...'); const formData = new FormData(event.target); const data = Object.fromEntries(formData.entries()); try { const result = await callApiProxy({ type: 'packingList', data: data });
+        renderPackingList(result); } catch (error) { displayMessage(`Packing list failed: ${error.message}`, 'error'); } finally { toggleLoading('packing-form', false); } }
+        async function findFlights(event) { event.preventDefault(); toggleLoading('flights-form', true, 'Finding Flights...'); const formData = new FormData(event.target); const data = Object.fromEntries(formData.entries()); try { const result = await callApiProxy({ type: 'flights', data: data });
+        renderFlightResults(result); } catch (error) { displayMessage(`Flight search failed: ${error.message}`, 'error'); } finally { toggleLoading('flights-form', false); } }
+        async function convertCurrencyStandalone() { toggleLoading('converter-form-standalone', true, '');
+        const amount = document.getElementById('convert-amount-standalone').value, from = document.getElementById('convert-from-standalone').value, to = document.getElementById('convert-to-standalone').value;
+        try { const result = await callApiProxy({ type: 'currency', amount: amount, from: from, to: to }); document.getElementById('converter-result-standalone').textContent = result.candidates[0].content.parts[0].text;
+        } catch(error) { displayMessage(`Conversion failed: ${error.message}`, 'error'); document.getElementById('converter-result-standalone').textContent = 'Error'; } finally { toggleLoading('converter-form-standalone', false, 'Convert'); } }
+        
+        // --- Rendering & Database Functions ---
+        function renderItinerary(data) {
+            const contentDiv = document.getElementById('planner-content');
+            const headerDiv = document.getElementById('itinerary-header');
+            if(!data || !data.title) { contentDiv.innerHTML = `<p class="text-gray-500 dark:text-gray-400 italic">Welcome! Please use the form above to generate a new itinerary.</p>`; headerDiv.classList.add('hidden'); headerDiv.innerHTML = ''; document.getElementById('packing-integration-section').classList.add('hidden'); document.getElementById('download-html-btn').classList.add('hidden'); document.getElementById('history-container').classList.add('hidden'); return; }
+            const { title, summary, budgetTier, bestSeasonToVisit, numberOfPeople, costPerHeadUSD, days } = deepSanitize(data);
+            
+            // === FIX START ===
+            // The original HTML string was corrupted by a copy-paste error. This is the correct version.
+            headerDiv.innerHTML = `<h3 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100">${title}</h3><p class="text-gray-600 dark:text-gray-400 mt-2">${summary}</p><div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center"><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Budget</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${budgetTier}</dd></div><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Travelers</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${numberOfPeople}</dd></div><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Cost/Head</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">$${costPerHeadUSD}</dd></div><div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Best Season</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${bestSeasonToVisit}</dd></div></div>`;
+            // === FIX END ===
+
+            let daysHTML = '';
+            if (days && Array.isArray(days)) {
+                days.forEach(day => {
+                    daysHTML += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${day.day}: ${day.theme} (${day.city})</h4><div class="mt-4 space-y-4">`;
+                    if (day.activities && Array.isArray(day.activities)) {
+                        day.activities.forEach(activity => {
+                            const crowdBadge = activity.crowdLevel ? getCrowdBadge(activity.crowdLevel) : '';
+                            const starRating = (activity.type && (activity.type.toLowerCase().includes('hotel') || activity.type.toLowerCase().includes('accommodation'))) ? `<div class="mt-2 star-rating ${getStarClass(activity.details)}"></div>` : '';
+                            
+                            // === FIX START ===
+                            // The end of this string was also cut off. Added the missing backtick.
+                            daysHTML += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"><div class="flex justify-between items-start"><div class="flex items-center"><h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${activity.name}</h5><button onclick="openQaModal('${sanitizeHTML(activity.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800" title="Ask about ${sanitizeHTML(activity.name)}"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button></div><div class="text-right"><p class="font-semibold text-gray-800 dark:text-gray-100">$${activity.approxCostUSD}</p>${crowdBadge}</div></div><p class="text-sm text-gray-500 dark:text-gray-500">${activity.type}</p><p class="mt-2 text-gray-700 dark:text-gray-300">${activity.details}</p><p class="mt-2 text-xs text-gray-500 dark:text-gray-500">Address: ${activity.address}</p>${starRating}</div>`;
+                            // === FIX END ===
+                        });
+                    }
+                    if (day.transportation_tip) { daysHTML += `<div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-300 flex items-start"><svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div><strong>Transportation Tip:</strong> ${day.transportation_tip}</div></div>`; } daysHTML += '</div></div>';
+                });
+            }
+            contentDiv.innerHTML = daysHTML;
+            headerDiv.classList.remove('hidden'); document.getElementById('packing-integration-section').classList.remove('hidden'); document.getElementById('download-html-btn').classList.remove('hidden');
+            document.getElementById('pack-destination').value = title; document.getElementById('pack-duration').value = days?.length || 7; document.getElementById('pack-season').value = bestSeasonToVisit;
+        }
+        function renderGroundedSearchResult(result) { const content = result.candidates[0].content.parts[0].text; const sources = result.candidates[0].groundingMetadata?.groundingAttributions; document.getElementById('search-title').classList.remove('hidden');
+        const searchContentDiv = document.getElementById('search-content'); searchContentDiv.innerHTML = window.marked.parse(content); if (sources && sources.length > 0) { const sourcesHtml = sources.map(source => `<li><a href="${source.web.uri}" target="_blank" class="text-blue-600 hover:underline">${source.web.title}</a></li>`).join('');
+        document.getElementById('search-sources').innerHTML = `<p class="font-semibold">Sources:</p><ul class="list-disc list-inside">${sourcesHtml}</ul>`; } else { document.getElementById('search-sources').innerHTML = ''; } }
+        function renderPackingList(result) { const content = result.candidates[0].content.parts[0].text; document.getElementById('packing-title').classList.remove('hidden');
+        const packingContentDiv = document.getElementById('packing-content'); packingContentDiv.innerHTML = window.marked.parse(content); }
+        function renderFlightResults(result) { const content = result.candidates[0].content.parts[0].text;
+        const sources = result.candidates[0].groundingMetadata?.groundingAttributions; document.getElementById('flights-title').classList.remove('hidden'); const flightsContentDiv = document.getElementById('flights-content'); flightsContentDiv.innerHTML = window.marked.parse(content);
+        if (sources && sources.length > 0) { const sourcesHtml = sources.map(source => `<li><a href="${source.web.uri}" target="_blank" class="text-blue-600 hover:underline">${source.web.title}</a></li>`).join('');
+        document.getElementById('flights-sources').innerHTML = `<p class="font-semibold">Sources:</p><ul class="list-disc list-inside">${sourcesHtml}</ul>`; } else { document.getElementById('flights-sources').innerHTML = ''; } }
+        async function saveCurrentItinerary() { if (!isUserLoggedIn || !supabaseClient || !currentItineraryData) return;
+        const { error } = await supabaseClient.from('itineraries').insert([{ user_id: currentUserId, data: currentItineraryData }]);
+        if (error) { displayMessage(`Failed to save itinerary: ${error.message}`, 'error'); console.error("Save Itinerary Error:", error); } else { displayMessage('Itinerary saved!', 'info'); } }
+        async function loadItineraries() { if (!isUserLoggedIn || !supabaseClient) return;
+        const { data, error } = await supabaseClient.from('itineraries').select('id, created_at, data').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(5);
+        if (error) { if (error.code !== 'PGRST116') { displayMessage(`Could not load trips: ${error.message}`, 'error'); } recentItineraries = []; renderItinerary(null); return; } if (data && data.length > 0) { recentItineraries = data.map(item => ({...item, data: deepSanitize(item.data)})); currentItineraryData = recentItineraries[0].data; renderItinerary(currentItineraryData); populateHistoryDropdown();
+        } else { recentItineraries = []; renderItinerary(null); } }
+        function populateHistoryDropdown() { const historyContainer = document.getElementById('history-container');
+        const historySelect = document.getElementById('itinerary-history'); if (recentItineraries.length > 1) { historyContainer.classList.remove('hidden'); historySelect.innerHTML = recentItineraries.map((item, index) => `<option value="${index}">${item.data.title}</option>`).join('');
+        historySelect.onchange = (e) => { const selectedIndex = e.target.value; currentItineraryData = recentItineraries[selectedIndex].data; renderItinerary(currentItineraryData); }; } else { historyContainer.classList.add('hidden'); } }
+        function populateCurrencies() { const fromSelect = document.getElementById('convert-from-standalone'); const toSelect = document.getElementById('convert-to-standalone');
+        CURRENCIES.forEach(c => { fromSelect.innerHTML += `<option value="${c.code}" ${c.defaultFrom ? 'selected' : ''}>${c.code} - ${c.name}</option>`; toSelect.innerHTML += `<option value="${c.code}" ${c.defaultTo ? 'selected' : ''}>${c.code} - ${c.name}</option>`; });
+        }
+        window.tryExample = function() { document.getElementById('country').value = 'France'; document.getElementById('cities').value = 'Paris';
+        document.getElementById('duration').value = '2'; document.getElementById('num-people').value = '2'; document.getElementById('budget').value = 'Moderate'; document.getElementById('accommodation-type').value = 'Hotel'; document.getElementById('trip-pace').value = 'Standard'; document.getElementById('interests').value = 'museums, cafes';
+        document.getElementById('planner-form').dispatchEvent(new Event('submit')); }
+        window.downloadHTML = function() { if (!currentItineraryData) { displayMessage('No itinerary to download.', 'error');
+        return; } const headerHTML = `<h1><strong>Travel Hub</strong></h1>` + document.getElementById('itinerary-header').innerHTML; const contentHTML = document.getElementById('planner-content').innerHTML;
+        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${sanitizeHTML(currentItineraryData.title)}</title><style>body{font-family:sans-serif;line-height:1.6;color:#333;max-width:800px;margin:20px auto;padding:20px;border:1px solid #eee;box-shadow:0 0 10px rgba(0,0,0,0.05)}h1,h2,h3,h4,h5{color:#2c3e50}</style></head><body>${headerHTML}${contentHTML}</body></html>`;
+        const blob = new Blob([fullHtml], { type: 'text/html' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${currentItineraryData.title.toLowerCase().replace(/\s+/g, '-')}-itinerary.html`;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link); }
+        
+        function switchTab(panelId) {
+            // Hide all content panels
+            ['search-panel', 'planner-panel', 'flights-panel', 'converter-panel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            // Show the selected content panel
+            const panel = document.getElementById(panelId);
+            if (panel) panel.style.display = 'block';
+
+            // Reset all desktop tabs
+            ['tab-search', 'tab-planner', 'tab-flights', 'tab-converter'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.classList.remove('text-indigo-600', 'border-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
+                    el.classList.add('text-gray-500', 'dark:text-gray-400');
+                }
+            });
+            // Highlight the active desktop tab
+            const tab = document.getElementById(`tab-${panelId.split('-')[0]}`);
+            if(tab) {
+                tab.classList.add('text-indigo-600', 'border-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
+                tab.classList.remove('text-gray-500', 'dark:text-gray-400');
+            }
+
+            // Reset all mobile nav buttons
+            ['nav-search', 'nav-planner', 'nav-flights', 'nav-converter'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.classList.remove('text-indigo-600', 'dark:text-indigo-400');
+                    el.classList.add('text-gray-500', 'dark:text-gray-400');
+                }
+            });
+            // Highlight the active mobile nav button
+            const nav = document.getElementById(`nav-${panelId.split('-')[0]}`);
+            if(nav) {
+                nav.classList.add('text-indigo-600', 'dark:text-indigo-400');
+                nav.classList.remove('text-gray-500', 'dark:text-gray-400');
+            }
+        }
+
+        // --- Main App Initialization ---
+        async function main() {
+            if (SUPABASE_URL && SUPABASE_ANON_KEY) { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            } else { console.error("Supabase config missing!"); displayMessage("Supabase configuration is missing.", 'error'); setUIState(false); return; }
+            
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                const user = session?.user || null;
+                isUserLoggedIn = !!user;
+                currentUserId = user?.id || 'anonymous_user';
+                currentUserName = user?.user_metadata?.full_name || user?.email || 'Anonymous';
+                
+                setUIState(isUserLoggedIn); 
+                if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && user) {
+                    if (event === 'SIGNED_IN') { displayMessage(`Welcome back, ${currentUserName}!`, 'info'); }
+                    loadItineraries();
+                }
+            });
+
+            document.getElementById('magic-link-form').addEventListener('submit', initiateMagicLink);
+            document.getElementById('qa-form').addEventListener('submit', handleQaSubmit);
+            document.querySelector('#qa-modal .modal-content').addEventListener('click', (e) => e.stopPropagation());
+            document.getElementById('qa-modal').addEventListener('click', closeQaModal);
+            
+            document.getElementById('feedback-form').addEventListener('submit', handleFeedbackSubmit);
+            document.querySelector('#feedback-modal .modal-content').addEventListener('click', (e) => e.stopPropagation());
+            document.getElementById('feedback-modal').addEventListener('click', closeFeedbackModal);
+            
+            document.getElementById('planner-form').addEventListener('submit', generateItinerary);
+            document.getElementById('search-form').addEventListener('submit', groundedSearch);
+            document.getElementById('packing-form').addEventListener('submit', generatePackingList);
+            document.getElementById('flights-form').addEventListener('submit', findFlights);
+            document.getElementById('convert-btn-standalone').onclick = convertCurrencyStandalone;
+
+            
+            // --- REVERTED JAVASCRIPT ---
+            // (The city suggestion block has been removed)
+            // ---
+
+
+            switchTab('planner-panel');
+            populateCurrencies();
+
+            // NEW: Set initial state of the dark mode button icon
+            const isCurrentlyDark = document.documentElement.classList.contains('dark');
+            setDarkMode(isCurrentlyDark);
+        }
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker: Registered', reg))
+                    .catch(err => console.log('Service Worker: Registration Error', err));
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', main);
+    </script>
+</body>
+</html>
