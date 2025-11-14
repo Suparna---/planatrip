@@ -22,7 +22,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- *** PDF SCRIPT REMOVED *** -->
 
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -124,7 +124,8 @@
                                 <div class="flex items-center justify-between mb-1"><label for="cities" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cities</label><button type="button" onclick="openFieldSearch('cities', 'City')" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-full p-1 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button></div>
                                 <input type="text" id="cities" name="cities" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Rome, Florence">
                             </div>
-                            <div class="col-span-1 md:col-span-3"><label for="staying-at(Your starting place)" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Staying At (Optional)</label><input type="text" id="staying-at" name="staying-at" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Hotel Artemide"></div>
+                            <!-- *** TEXT CHANGE HERE *** -->
+                            <div class="col-span-1 md:col-span-3"><label for="staying-at" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Staying At or Your Starting Point (Optional)</label><input type="text" id="staying-at" name="staying-at" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Hotel Artemide"></div>
                         </div>
                         <div class="grid grid-cols-3 md:grid-cols-5 gap-4">
                             <div><label for="duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</label><input type="number" id="duration" name="duration" required min="1" max="30" value="3" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
@@ -166,7 +167,8 @@
                                 </div>
                             </div>
                         </div>
-                        <button id="download-pdf-btn" onclick="downloadPDF()" class="hidden mt-6 w-full py-3 px-4 rounded-lg shadow-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition"><span class="inline-block w-4 h-4 mr-1"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></span>Download as PDF</button>
+                        <!-- *** HTML DOWNLOAD BUTTON *** -->
+                        <button id="download-html-btn" onclick="downloadHTML()" class="hidden mt-6 w-full py-3 px-4 rounded-lg shadow-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition"><span class="inline-block w-4 h-4 mr-1"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></span>Download as HTML</button>
                     </div>
                 </div>
 
@@ -367,73 +369,98 @@
             }
         }
 
-        // *** PDF FIX (Robust off-screen rendering) ***
-        window.downloadPDF = function() {
-            if (!currentItineraryData) return displayMessage('No itinerary to download.', 'error');
-            
-            // Clean up any old containers
-            const oldContainer = document.getElementById('pdf-render-container');
-            if (oldContainer) {
-                document.body.removeChild(oldContainer);
+        // *** HTML DOWNLOAD FUNCTION (Replaces PDF) ***
+        window.downloadHTML = function() {
+            if (!currentItineraryData) {
+                displayMessage('No itinerary to download.', 'error');
+                return;
             }
 
-            // Scroll to top to ensure canvas captures everything
-            window.scrollTo(0,0); 
-            
-            const element = document.getElementById('planner-content');
             const header = document.getElementById('itinerary-header').innerHTML;
-            
-            // Create a temp container for the PDF content
-            const container = document.createElement('div');
-            container.id = 'pdf-render-container';
-            
-            // *** PDF FIX: Use off-screen positioning instead of visibility:hidden ***
-            container.style.position = 'absolute';
-            container.style.left = '-9999px'; // Move it way off-screen
-            container.style.top = '0';
-            container.style.width = '800px'; // Set a reasonable width for rendering
-            container.style.zIndex = '-1000'; // Send it to the back
+            const content = document.getElementById('planner-content').innerHTML;
+            const title = currentItineraryData.title || 'My Itinerary';
 
-            container.innerHTML = `
-                <div style="padding: 20px; font-family: sans-serif; color: #333; width: 100%;">
-                    <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px;">
-                        <h1 style="color: #4f46e5; margin: 0;">TravelHub</h1>
-                        <p style="margin: 5px 0 0 0; color: #666;">Your AI Travel Itinerary</p>
-                        <p style="margin: 2px 0; color: #888; font-size: 12px;">www.planatrip.xyz</p>
+            // Create the HTML content with embedded styles for a clean, standalone file
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${sanitizeHTML(title)}</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; background-color: #f9fafb; color: #111827; max-width: 800px; margin: 20px auto; padding: 20px; }
+                        h1, h2, h3, h4, h5 { color: #111827; }
+                        h1 { font-size: 2.25rem; color: #4f46e5; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+                        h3 { font-size: 1.8rem; margin-top: 1.5em; }
+                        h4 { font-size: 1.5rem; color: #4f46e5; margin-top: 2em; border-bottom: 1px solid #eee; }
+                        h5 { font-size: 1.15rem; margin-bottom: 0.25em; }
+                        p { margin-top: 0.5em; }
+                        /* Header Grid */
+                        .header-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; text-align: center; margin-top: 1.5rem; }
+                        .header-grid > div { background-color: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 0.5rem; padding: 0.75rem; }
+                        .header-grid dt { font-size: 0.9rem; font-weight: 500; color: #4f46e5; }
+                        .header-grid dd { font-size: 1.25rem; font-weight: 700; }
+                        /* Activity Card */
+                        .activity-card { background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 0.5rem; padding: 1rem; margin-top: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+                        .activity-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+                        .activity-card-header h5 { margin: 0; }
+                        .activity-card-header .cost { font-weight: 600; text-align: right; }
+                        .activity-card .type { font-size: 0.9rem; color: #71717a; margin-top: 0; }
+                        .activity-card .details { margin-top: 0.5em; }
+                        .activity-card .address { font-size: 0.8rem; color: #71717a; margin-top: 0.5em; }
+                        .star-rating { color: transparent; text-shadow: 0 0 0 #facc15; }
+                        .star-rating::before { content: '★★★★★'; font-size: 1.25rem; }
+                        .stars-5::before { content: '★★★★★'; } .stars-4::before { content: '★★★★☆'; } .stars-3::before { content: '★★★☆☆'; } .stars-2::before { content: '★★☆☆☆'; } .stars-1::before { content: '★☆☆☆☆'; } .stars-0::before { content: '☆☆☆☆☆'; }
+                        .badge { display: inline-block; padding: 0.25em 0.5em; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; }
+                        .high { background-color: #fee2e2; color: #b91c1c; }
+                        .moderate { background-color: #fef3c7; color: #b45309; }
+                        .low { background-color: #dcfce7; color: #166534; }
+                        .footer { text-align: center; font-size: 0.8rem; color: #a1a1aa; border-top: 1px solid #eee; padding-top: 1rem; margin-top: 2rem; }
+                        /* Remove elements that shouldn't be in the download */
+                        button, svg { display: none !important; } 
+                        .flex, .justify-between, .items-start { display: block; }
+                    </style>
+                </head>
+                <body>
+                    <!-- We need to re-class the content for the embedded styles -->
+                    <div id="itinerary-header-html">
+                        ${header.replace(/class="/g, 'class="header-')}
                     </div>
-                    ${header}
-                    <div style="margin-top: 20px;">
-                        ${element.innerHTML}
+                    <div id="planner-content-html">
+                        ${content
+                            .replace(/class="mt-4 grid/g, 'class="header-grid')
+                            .replace(/class="bg-indigo-50/g, 'class="header-grid-item')
+                            .replace(/class="text-sm font-medium text-indigo-700/g, 'class="header-grid-dt')
+                            .replace(/class="text-lg font-bold text-gray-900/g, 'class="header-grid-dd')
+                            .replace(/class="p-4 bg-gray-50/g, 'class="activity-card')
+                            .replace(/class="flex justify-between items-start"/g, 'class="activity-card-header"')
+                            .replace(/class="font-bold text-gray-800/g, 'class=""')
+                            .replace(/class="font-semibold text-gray-800/g, 'class="cost"')
+                            .replace(/class="text-sm text-gray-500/g, 'class="type"')
+                            .replace(/class="mt-2 text-gray-700/g, 'class="details"')
+                            .replace(/class="mt-2 text-xs text-gray-500/g, 'class="address"')
+                            .replace(/class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700"/g, 'class="badge high"')
+                            .replace(/class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700"/g, 'class="badge moderate"')
+                            .replace(/class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700"/g, 'class="badge low"')
+                        }
                     </div>
-                    <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 10px;">
+                    <div class="footer">
                         Planned with <strong>TravelHub</strong> • www.planatrip.xyz
                     </div>
-                </div>
+                </body>
+                </html>
             `;
-            
-            // Append to body to make it renderable
-            document.body.appendChild(container);
 
-            const opt = {
-                margin: 0.5,
-                filename: `${currentItineraryData.title.replace(/\s+/g, '-').toLowerCase()}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true }, // Added useCORS
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-
-            // Run html2pdf and *then* remove the element
-            html2pdf().from(container).set(opt).save().then(() => {
-                if (document.getElementById('pdf-render-container')) {
-                    document.body.removeChild(container);
-                }
-            }).catch((err) => {
-                console.error('PDF generation failed:', err);
-                if (document.getElementById('pdf-render-container')) {
-                    document.body.removeChild(container);
-                }
-                displayMessage('Error generating PDF.', 'error');
-            });
+            // Create a blob and trigger download
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${title.replace(/\s+/g, '-').toLowerCase()}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
         }
 
         // --- API & Data ---
@@ -454,7 +481,7 @@
             if (!error && data) currentItineraryId = data[0].id;
         }
 
-async function loadItineraries() { if (!isUserLoggedIn) return;
+        async function loadItineraries() { if (!isUserLoggedIn) return;
             // Fetch is_favorite column too
             const { data, error } = await supabaseClient.from('itineraries').select('id, created_at, data, is_favorite').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(5);
             if (!error && data?.length) { 
@@ -493,7 +520,7 @@ async function loadItineraries() { if (!isUserLoggedIn) return;
 
         function renderItinerary(data, isFav = false) {
             const div = document.getElementById('planner-content'), hdr = document.getElementById('itinerary-header');
-            if(!data) { div.innerHTML = '<p class="text-gray-500 italic">Welcome! Plan a trip above.</p>'; hdr.classList.add('hidden'); hdr.innerHTML=''; document.getElementById('download-pdf-btn').classList.add('hidden'); return; }
+            if(!data) { div.innerHTML = '<p class="text-gray-500 italic">Welcome! Plan a trip above.</p>'; hdr.classList.add('hidden'); hdr.innerHTML=''; document.getElementById('download-html-btn').classList.add('hidden'); return; }
             const { title, summary, budgetTier, bestSeasonToVisit, numberOfPeople, costPerHeadUSD, days } = deepSanitize(data);
             
             // Render Header with NEW ICONS
@@ -510,7 +537,7 @@ async function loadItineraries() { if (!isUserLoggedIn) return;
                 <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Budget</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${budgetTier}</dd></div>
                     <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Travelers</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${numberOfPeople}</dd></div>
-                    <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Cost/Head</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-1S00">$${costPerHeadUSD}</dd></div>
+                    <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Cost/Head</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">$${costPerHeadUSD}</dd></div>
                     <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Season</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${bestSeasonToVisit}</dd></div>
                 </div>
             `;
@@ -530,8 +557,12 @@ async function loadItineraries() { if (!isUserLoggedIn) return;
                 html += '</div></div>';
             });
             div.innerHTML = html;
-            hdr.classList.remove('hidden'); document.getElementById('packing-integration-section').classList.remove('hidden'); document.getElementById('download-pdf-btn').classList.remove('hidden');
-            document.getElementById('pack-destination').value = title; document.getElementById('pack-duration').value = days?.length||3; document.getElementById('pack-season').value = bestSeasonToVisit;
+            hdr.classList.remove('hidden'); 
+            document.getElementById('packing-integration-section').classList.remove('hidden'); 
+            document.getElementById('download-html-btn').classList.remove('hidden'); // Show HTML button
+            document.getElementById('pack-destination').value = title; 
+            document.getElementById('pack-duration').value = days?.length||3; 
+            document.getElementById('pack-season').value = bestSeasonToVisit;
         }
 
         async function handleFeedbackSubmit(e) { e.preventDefault(); if(!isUserLoggedIn) return displayMessage('Login required', 'error'); toggleLoading('feedback-form', true, 'Sending...'); const fd = new FormData(e.target); const { error } = await supabaseClient.from('feedback').insert([{ user_id: currentUserId, rating: parseInt(fd.get('rating')||0), comments: fd.get('comments'), user_name: currentUserName }]); toggleLoading('feedback-form', false, 'Submit'); if(error) displayMessage('Error sending feedback', 'error'); else { displayMessage('Feedback sent!', 'info'); closeFeedbackModal(); } }
@@ -551,12 +582,13 @@ async function loadItineraries() { if (!isUserLoggedIn) return;
             document.getElementById('convert-btn-standalone').onclick = async () => { toggleLoading('converter-form-standalone', true, ''); try { const res = await callApiProxy({ type: 'currency', amount: document.getElementById('convert-amount-standalone').value, from: document.getElementById('convert-from-standalone').value, to: document.getElementById('convert-to-standalone').value }); document.getElementById('converter-result-standalone').textContent = res.candidates[0].content.parts[0].text; } catch(e){} finally { toggleLoading('converter-form-standalone', false, 'Convert'); } };
             
             switchTab('planner-panel');
-           CURRENCIES.forEach(c => { const o = `<option value="${c.code}">${c.code} - ${c.name}</option>`; document.getElementById('convert-from-standalone').innerHTML += o; document.getElementById('convert-to-standalone').innerHTML += o; });
+            CURRENCIES.forEach(c => { const o = `<option value="${c.code}">${c.code} - ${c.name}</option>`; document.getElementById('convert-from-standalone').innerHTML += o; document.getElementById('convert-to-standalone').innerHTML += o; });
             document.getElementById('convert-from-standalone').value = 'USD'; document.getElementById('convert-to-standalone').value = 'EUR';
             setDarkMode(document.documentElement.classList.contains('dark'));
             
             // *** SERVICE WORKER FIX (Prevents error in blob: previews) ***
             if ('serviceWorker' in navigator && !window.location.protocol.startsWith('blob:')) {
+                // We are in the public/ folder, so sw.js is in the same directory
                 navigator.serviceWorker.register('sw.js')
                     .then(registration => {
                         console.log('ServiceWorker registration successful with scope: ', registration.scope);
