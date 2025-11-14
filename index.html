@@ -269,9 +269,29 @@
 
         window.readItinerary = function() {
             if (!currentItineraryData) return;
-            if (window.speechSynthesis.speaking) { window.speechSynthesis.cancel(); return; }
-            const text = `${currentItineraryData.title}. ${currentItineraryData.summary}.`;
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel(); 
+                return; 
+            }
+            
+            let text = `${currentItineraryData.title}. ${currentItineraryData.summary}. `;
+            
+            if (currentItineraryData.days) {
+                currentItineraryData.days.forEach(day => {
+                    text += `Day ${day.day}: ${day.theme}, in ${day.city}. `;
+                    if (day.activities) {
+                        day.activities.forEach(activity => {
+                            text += `${activity.name}. ${activity.details}. `;
+                        });
+                    }
+                });
+            }
+
             const utter = new SpeechSynthesisUtterance(text);
+            utter.onerror = (event) => {
+                console.error('Speech synthesis error:', event.error);
+                displayMessage('Error starting text-to-speech.', 'error');
+            };
             window.speechSynthesis.speak(utter);
         }
 
@@ -301,13 +321,21 @@
             const element = document.getElementById('planner-content');
             const header = document.getElementById('itinerary-header').innerHTML;
             
-            // Create a temp container for the PDF content to style it nicely
+            // Create a temp container for the PDF content
             const container = document.createElement('div');
+            
+            // Add styles to make it render off-screen but still be in the DOM
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            container.style.top = '0';
+            container.style.width = '800px'; // Set a reasonable width for rendering
+
             container.innerHTML = `
-                <div style="padding: 20px; font-family: sans-serif; color: #333;">
+                <div style="padding: 20px; font-family: sans-serif; color: #333; width: 100%;">
                     <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px;">
                         <h1 style="color: #4f46e5; margin: 0;">TravelHub</h1>
-                        <p style="margin: 5px 0; color: #666;">Your AI Travel Itinerary</p>
+                        <p style="margin: 5px 0 0 0; color: #666;">Your AI Travel Itinerary</p>
+                        <p style"margin: 2px 0; color: #888; font-size: 12px;">www.planatrip.xyz</p>
                     </div>
                     ${header}
                     <div style="margin-top: 20px;">
@@ -318,6 +346,9 @@
                     </div>
                 </div>
             `;
+            
+            // Append to body to make it renderable
+            document.body.appendChild(container);
 
             const opt = {
                 margin: 0.5,
@@ -327,7 +358,14 @@
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
-            html2pdf().from(container).save();
+            // Run html2pdf and *then* remove the element
+            html2pdf().from(container).set(opt).save().then(() => {
+                document.body.removeChild(container);
+            }).catch((err) => {
+                console.error('PDF generation failed:', err);
+                document.body.removeChild(container);
+                displayMessage('Error generating PDF.', 'error');
+            });
         }
 
         // --- API & Data ---
@@ -371,10 +409,10 @@
             hdr.innerHTML = `
                 <div class="flex justify-between items-start">
                     <h3 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100">${title}</h3>
-                    <div class="flex space-x-2">
-                         <button id="fav-btn" onclick="toggleFavorite()" class="${isFav ? 'text-yellow-400' : 'text-gray-400'} hover:text-yellow-500 transition"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg></button>
-                         <button onclick="shareItinerary()" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg></button>
-                         <button onclick="readItinerary()" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
+                    <div class="flex space-x-3">
+                         <button id="fav-btn" onclick="toggleFavorite()" title="Save to Favorites" class="${isFav ? 'text-yellow-400' : 'text-gray-400'} hover:text-yellow-500 transition"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg></button>
+                         <button onclick="shareItinerary()" title="Share Itinerary" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg></button>
+                         <button onclick="readItinerary()" title="Read Itinerary Aloud" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
                     </div>
                 </div>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">${summary}</p>
