@@ -55,10 +55,10 @@
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .prose h1, .prose h2, .prose h3 { font-weight: 700; color: #374151; } .prose ul { list-style-type: disc; padding-left: 1.5rem; } .prose li { margin-bottom: 0.5rem; }
         .dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #f3f4f6; } .dark .prose { color: #d1d5db; }
-        #qa-answer-container, #feedback-comments { max-height: 40vh; overflow-y: auto; }
+        #qa-answer-container, #feedback-comments, #profile-modal .modal-content { max-height: 80vh; overflow-y: auto; }
         .rating-stars { display: inline-flex; flex-direction: row-reverse; } .rating-stars input { display: none; } .rating-stars label { color: #d1d5db; font-size: 2.5rem; cursor: pointer; transition: color 0.2s; } .dark .rating-stars label { color: #4b5563; } .rating-stars input:checked ~ label, .rating-stars label:hover, .rating-stars label:hover ~ label { color: #facc15; } .dark .rating-stars input:checked ~ label, .dark .rating-stars label:hover, .dark .rating-stars label:hover ~ label { color: #facc15; }
     
-        /* *** NEW STYLES FOR IMAGE MODAL (FIXED) *** */
+        /* *** IMAGE MODAL STYLES *** */
         #image-modal-close-btn {
             position: absolute; top: -10px; right: -10px;
             background-color: #1f2937; color: white;
@@ -78,10 +78,9 @@
             margin-bottom: 1rem;
             min-height: 1.5rem; /* Prevents layout shift */
         }
-        /* *** CSS FIX: Added proper dark mode selector *** */
         .dark #image-modal-title {
             color: #f3f4f6;
-            border-bottom-color: #374151; /* Was dark:border-gray-700 */
+            border-bottom-color: #374151; 
         }
 
         #image-modal-body { min-height: 300px; display: flex; justify-content: center; align-items: center; }
@@ -127,6 +126,13 @@
                     <p class="text-center text-gray-500 dark:text-gray-400 text-base mt-1">Plan a trip...</p>
                 </div>
                 <div class="flex items-center flex-shrink-0 h-10 mt-4 sm:absolute sm:top-2 sm:right-0 sm:mt-0">
+                    
+                    <!-- *** NEW PROFILE BUTTON (hidden by default) *** -->
+                    <button id="profile-btn" onclick="openProfileModal()" class="hidden ml-2 flex items-center justify-center h-9 px-2 py-1 border border-indigo-600 rounded-lg shadow-sm text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-gray-700 focus:outline-none transition duration-150 ease-in-out" title="My Profile">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        <span class="hidden md:inline ml-2">Profile</span>
+                    </button>
+                    
                     <button id="feedback-btn" onclick="openFeedbackModal()" class="ml-2 flex items-center justify-center h-9 px-2 py-1 border border-indigo-600 rounded-lg shadow-sm text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-gray-700 focus:outline-none transition duration-150 ease-in-out" title="Provide Feedback">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-4 0H9v2h2V9z" clip-rule="evenodd"></path></svg>
                         <span class="hidden md:inline ml-2">Feedback</span>
@@ -187,7 +193,7 @@
                             <div><label for="accommodation-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Accommodation</label><select id="accommodation-type" name="accommodation-type" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white"><option value="Hotel" selected>Hotels</option><option value="Hostel">Hostels</option><option value="Airbnb/Rental">Airbnb/Rental</option><option value="Homestead/Boutique">Boutique Stays</option></select></div>
                             <div><label for="trip-pace" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Trip Pace</label><select id="trip-pace" name="trip-pace" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white"><option value="Standard" selected>Standard</option><option value="Jam-Packed">Jam-Packed</option><option value="Leisure">Leisure</option></select></div>
                         </div>
-                        <div><label for="interests" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Interests</label><input type="text" id="interests" name="interests" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., history, hiking"></div>
+                        <div><label for="interests" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Interests</label><input type="text" id="interests" name="interests" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., history, hiking (Your defaults will be added!)"></div>
                         <button type="submit" id="plan-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition disabled:bg-indigo-400">Generate Itinerary</button>
                     </form>
                     <div id="planner-output" class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
@@ -279,14 +285,45 @@
             </div>
         </div>
     </div>
+
+    <!-- *** NEW PROFILE MODAL *** -->
+    <div id="profile-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">My Profile</h3>
+                <button onclick="closeProfileModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Save your preferences, and the AI will use them for all future itineraries.</p>
+            <form id="profile-form" class="space-y-4">
+                <div>
+                    <label for="profile-budget" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Default Budget</label>
+                    <select id="profile-budget" name="profile-budget" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white">
+                        <option value="">No Preference</option>
+                        <option value="Low Budget">Low Budget</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Extravagance">Extravagance</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="profile-diet" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dietary Needs (Optional)</label>
+                    <input type="text" id="profile-diet" name="profile-diet" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Vegetarian, Gluten-Free">
+                </div>
+                <div>
+                    <label for="profile-interests" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Default Interests (Optional)</label>
+                    <input type="text" id="profile-interests" name="profile-interests" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., History, Museums, Hiking">
+                </div>
+                <button type="submit" id="profile-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Save Preferences</button>
+            </form>
+        </div>
+    </div>
     
     <nav class="mobile-nav md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg"><div class="max-w-4xl mx-auto flex justify-around"><button id="nav-search" onclick="switchTab('search-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg><span class="text-xs font-medium">Research</span></button><button id="nav-planner" onclick="switchTab('planner-panel')" class="flex flex-col items-center justify-center p-3 text-indigo-600 dark:text-indigo-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="text-xs font-medium">Planner</span></button><button id="nav-flights" onclick="switchTab('flights-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg><span class="text-xs font-medium">Flights</span></button><button id="nav-converter" onclick="switchTab('converter-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg><span class="text-xs font-medium">Currency</span></button></div></nav>
-
-    <script>
+<script>
         // --- Globals & Constants ---
         let currentItineraryData = null, recentItineraries = [];
         let currentItineraryId = null; // Store ID to update favorites
         let currentImageRequestToken = 0; // *** FIX for image race condition ***
+        let userProfile = null; // *** NEW: To store user preferences ***
         const SUPABASE_URL = 'https://omwqfqzcighrmqoogmxj.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9td3FmcXpjaWdocm1xb29nbXhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2NTQwNzYsImV4cCI6MjA3NjIzMDA3Nn0.pVPKedBrEBj3QNsc5eELj8ARWvuqfAyyWIuwS6RWsHk';
         let supabaseClient = null, isUserLoggedIn = false, currentUserId = 'anonymous_user', currentUserName = 'Anonymous';
@@ -343,10 +380,8 @@
         }
         window.toggleDarkMode = function() { setDarkMode(!document.documentElement.classList.contains('dark')); }
         
-        // *** NEW FUNCTION TO FIX &amp; BUG ***
         function decodeHTMLEntities(text) {
             if (typeof text !== 'string') return text;
-            // Use a textarea to safely decode entities
             const temp = document.createElement('textarea');
             temp.innerHTML = text;
             return temp.value;
@@ -366,9 +401,7 @@
                 const sanitizedObject = {}; 
                 for (const key in data) { 
                     if (Object.prototype.hasOwnProperty.call(data, key)) { 
-                        // We must sanitize recursively *first*
                         const sanitizedValue = deepSanitize(data[key]);
-                        // Then apply decode *after* sanitizing
                         if (typeof sanitizedValue === 'string') {
                             sanitizedObject[key] = decodeHTMLEntities(sanitizedValue);
                         } else {
@@ -379,7 +412,6 @@
                 return sanitizedObject; 
             }
             if (typeof data === 'string') {
-                // For simple strings, just decode.
                 return decodeHTMLEntities(data);
             }
             return data;
@@ -389,14 +421,20 @@
         function setUIState(isLoggedIn) {
             document.getElementById('login-text').textContent = isLoggedIn ? 'Logout' : 'Login';
             document.getElementById('login-btn').classList.toggle('bg-red-600', isLoggedIn);
+            
+            // *** NEW: Show/Hide Profile Button ***
+            const profileBtn = document.getElementById('profile-btn');
+            
             if (isLoggedIn) { 
                 document.getElementById('app-container').classList.remove('app-locked'); 
                 document.getElementById('login-modal').style.display = 'none'; 
                 document.getElementById('feedback-btn').style.display = 'flex'; 
+                profileBtn.style.display = 'flex'; // Show profile button
             } else { 
                 document.getElementById('app-container').classList.add('app-locked'); 
                 document.getElementById('login-modal').style.display = 'flex'; 
                 document.getElementById('feedback-btn').style.display = 'none'; 
+                profileBtn.style.display = 'none'; // Hide profile button
                 currentItineraryData = null; 
                 recentItineraries = []; 
                 renderItinerary(null); 
@@ -406,7 +444,7 @@
         window.initiateMagicLink = async function(e) { e.preventDefault(); const email = document.getElementById('auth-email').value, name = document.getElementById('auth-name').value; if (!email || !name) { displayMessage('Please enter name and email.', 'error'); return; } toggleLoading('magic-link-form', true, 'Sending...'); const { error } = await supabaseClient.auth.signInWithOtp({ email: email, options: { data: { full_name: name } } }); toggleLoading('magic-link-form', false); if (error) displayMessage(`Auth Error: ${error.message}`, 'error'); else { document.getElementById('login-modal').style.display = 'none'; displayMessage(`Magic link sent to ${email}.`, 'info'); } }
         
         function displayMessage(msg, type = 'info') { const ex = document.getElementById('status-message'); if (ex) ex.remove(); const el = document.createElement('div'); el.id = 'status-message'; el.className = `p-3 fixed top-4 left-1/2 transform -translate-x-1/2 z-[1001] text-sm rounded-lg shadow-xl ${type === 'error' ? 'bg-red-600' : 'bg-blue-600'} text-white transition-all`; el.textContent = msg; document.body.appendChild(el); setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 5000); }
-        function toggleLoading(fid, load, txt = 'Loading...') { const b = document.getElementById({ 'planner-form': 'plan-btn', 'search-form': 'search-btn', 'packing-form': 'pack-btn', 'flights-form': 'flights-btn', 'magic-link-form': 'magic-link-btn', 'qa-form': 'qa-submit-btn', 'feedback-form': 'feedback-submit-btn' }[fid]); if (b) { b.disabled = load; b.innerHTML = load ? `<span class="loading-ring mr-2"></span> ${txt}` : b.innerText; } }
+        function toggleLoading(fid, load, txt = 'Loading...') { const b = document.getElementById({ 'planner-form': 'plan-btn', 'search-form': 'search-btn', 'packing-form': 'pack-btn', 'flights-form': 'flights-btn', 'magic-link-form': 'magic-link-btn', 'qa-form': 'qa-submit-btn', 'feedback-form': 'feedback-submit-btn', 'profile-form': 'profile-submit-btn' }[fid]); if (b) { b.disabled = load; b.innerHTML = load ? `<span class="loading-ring mr-2"></span> ${txt}` : b.innerText; } }
         window.toggleAccordion = function(id) { const el = document.getElementById(`content-${id}`); el.classList.toggle('open'); document.getElementById(`icon-${id}`).querySelector('svg').style.transform = el.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)'; }
         function getCrowdBadge(l) { const c = { high: 'bg-red-100 text-red-700', moderate: 'bg-yellow-100 text-yellow-700', low: 'bg-green-100 text-green-700' }; return l ? `<span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ${c[l.toLowerCase()]||'bg-gray-200'}">Crowd: ${l}</span>` : ''; }
         function getStarClass(d) { const m = d?.match(/(\d)-star/i); return `stars-${m?Math.min(5,Math.max(0,parseInt(m[1]))):0}`; }
@@ -418,25 +456,70 @@
         window.openFeedbackModal = function() { if (!isUserLoggedIn) return displayMessage('Login to verify.', 'error'); document.getElementById('feedback-modal').classList.remove('hidden'); }
         window.closeFeedbackModal = function() { document.getElementById('feedback-modal').classList.add('hidden'); }
 
-        // *** NEW IMAGE MODAL FUNCTIONS (WITH RACE-CONDITION FIX) ***
+        // *** NEW PROFILE MODAL FUNCTIONS ***
+        window.openProfileModal = function() {
+            if (!isUserLoggedIn || !userProfile) {
+                displayMessage('Login to set preferences.', 'error');
+                return;
+            }
+            // Populate the form with saved data
+            document.getElementById('profile-budget').value = userProfile.default_budget || '';
+            document.getElementById('profile-diet').value = userProfile.dietary_needs || '';
+            document.getElementById('profile-interests').value = userProfile.default_interests || '';
+            
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+        window.closeProfileModal = function() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+        async function handleProfileSave(e) {
+            e.preventDefault();
+            if (!isUserLoggedIn || !currentUserId) return;
+
+            toggleLoading('profile-form', true, 'Saving...');
+            
+            const newProfile = {
+                id: currentUserId, // This links it to the auth user
+                default_budget: document.getElementById('profile-budget').value,
+                dietary_needs: document.getElementById('profile-diet').value,
+                default_interests: document.getElementById('profile-interests').value,
+                created_at: new Date(), // Supabase handles this, but good to have
+            };
+
+            // 'upsert' means: update if exists, or insert if new.
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .upsert(newProfile)
+                .select(); // Must .select() to get the data back
+
+            if (error) {
+                console.error('Error saving profile:', error);
+                displayMessage(`Error: ${error.message}`, 'error');
+            } else {
+                userProfile = data[0]; // Update local profile
+                displayMessage('Preferences saved!');
+                closeProfileModal();
+            }
+            toggleLoading('profile-form', false, 'Save Preferences');
+        }
+        // *** END OF PROFILE MODAL FUNCTIONS ***
+
+        // *** IMAGE MODAL FUNCTIONS ***
         window.openImageModal = async function(prompt) {
             const modal = document.getElementById('image-modal');
             const titleDiv = document.getElementById('image-modal-title');
             const bodyDiv = document.getElementById('image-modal-body');
             if (!modal || !titleDiv || !bodyDiv) return;
 
-            // *** FIX for race condition ***
             const requestToken = ++currentImageRequestToken;
 
             modal.classList.remove('hidden');
-            titleDiv.textContent = decodeHTMLEntities(prompt); // Set title immediately
-            bodyDiv.innerHTML = '<div id="image-modal-loader"></div>'; // Show loader
+            titleDiv.textContent = decodeHTMLEntities(prompt); 
+            bodyDiv.innerHTML = '<div id="image-modal-loader"></div>'; 
 
             try {
                 const res = await callApiProxy({ type: 'generateImage', prompt: prompt });
                 
-                // *** FIX for race condition ***
-                // Only display the image if this is still the most recent request
                 if (requestToken === currentImageRequestToken) {
                     if (res.base64Image) {
                         bodyDiv.innerHTML = `<img src="data:image/png;base64,${res.base64Image}" alt="${sanitizeHTML(prompt)}" />`;
@@ -444,11 +527,9 @@
                         throw new Error('No image data received.');
                     }
                 }
-                // If token is old, do nothing. The new request will handle it.
 
             } catch (err) {
                 console.error('Image generation failed:', err);
-                // Only show error if this is still the most recent request
                 if (requestToken === currentImageRequestToken) {
                     bodyDiv.innerHTML = `<p class="text-red-500">Could not load image for ${sanitizeHTML(prompt)}.</p>`;
                 }
@@ -458,11 +539,9 @@
             const modal = document.getElementById('image-modal');
             if (modal) modal.classList.add('hidden');
             const bodyDiv = document.getElementById('image-modal-body');
-            if (bodyDiv) bodyDiv.innerHTML = ''; // Clear content
-            // *** FIX for race condition ***
-            currentImageRequestToken++; // Invalidate any ongoing requests
+            if (bodyDiv) bodyDiv.innerHTML = ''; 
+            currentImageRequestToken++; 
         }
-        // *** END OF NEW IMAGE MODAL FUNCTIONS ***
 
         // --- NEW FEATURES: Share, Speak, Download, Star ---
         window.shareItinerary = async function() {
@@ -488,7 +567,7 @@
             if (currentItineraryData.days) {
                 currentItineraryData.days.forEach(day => {
                     text += `Day ${day.day}: ${day.theme}, in ${day.city}. `;
-                    if (day.foodSuggestion) { // Add food suggestion
+                    if (day.foodSuggestion) { 
                         text += `Food suggestion: ${day.foodSuggestion}. `;
                     }
                     if (day.activities) {
@@ -526,7 +605,6 @@
             }
         }
 
-        // *** HTML DOWNLOAD FUNCTION (Replaces PDF) ***
         window.downloadHTML = function() {
             if (!currentItineraryData) {
                 displayMessage('No itinerary to download.', 'error');
@@ -537,7 +615,6 @@
             const content = document.getElementById('planner-content').innerHTML;
             const title = currentItineraryData.title || 'My Itinerary';
 
-            // Create the HTML content with embedded styles for a clean, standalone file
             const htmlContent = `
                 <!DOCTYPE html>
                 <html lang="en">
@@ -553,12 +630,10 @@
                         h4 { font-size: 1.5rem; color: #4f46e5; margin-top: 2em; border-bottom: 1px solid #eee; }
                         h5 { font-size: 1.15rem; margin-bottom: 0.25em; }
                         p { margin-top: 0.5em; }
-                        /* Header Grid */
                         .header-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; text-align: center; margin-top: 1.5rem; }
                         .header-grid > div { background-color: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 0.5rem; padding: 0.75rem; }
                         .header-grid dt { font-size: 0.9rem; font-weight: 500; color: #4f46e5; }
                         .header-grid dd { font-size: 1.25rem; font-weight: 700; }
-                        /* Activity Card */
                         .activity-card { background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 0.5rem; padding: 1rem; margin-top: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
                         .activity-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
                         .activity-card-header h5 { margin: 0; }
@@ -573,9 +648,8 @@
                         .high { background-color: #fee2e2; color: #b91c1c; }
                         .moderate { background-color: #fef3c7; color: #b45309; }
                         .low { background-color: #dcfce7; color: #166534; }
-                        /* Tip Box Styles */
                         .tip-box { margin-top: 1rem; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid; display: flex; align-items: flex-start; }
-                        .tip-box-icon { display: none !important; } /* Hide icon in download */
+                        .tip-box-icon { display: none !important; } 
                         .tip-box-content h5 { font-weight: 700; margin-top: 0; margin-bottom: 0.25rem; }
                         .tip-box-content p { font-size: 0.875rem; margin: 0; }
                         .tip-blue { background-color: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
@@ -583,13 +657,11 @@
                         .tip-purple { background-color: #f5f3ff; border-color: #ddd6fe; color: #5b21b6; }
                         .tip-purple h5 { color: #4c1d95; }
                         .footer { text-align: center; font-size: 0.8rem; color: #a1a1aa; border-top: 1px solid #eee; padding-top: 1rem; margin-top: 2rem; }
-                        /* Remove elements that shouldn't be in the download */
                         button, svg { display: none !important; } 
                         .flex, .justify-between, .items-start { display: block; }
                     </style>
                 </head>
                 <body>
-                    <!-- We need to re-class the content for the embedded styles -->
                     <div id="itinerary-header-html">
                         ${header.replace(/class="/g, 'class="header-')}
                     </div>
@@ -620,7 +692,6 @@
                 </html>
             `;
 
-            // Create a blob and trigger download
             const blob = new Blob([htmlContent], { type: 'text/html' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
@@ -630,8 +701,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(a.href);
         }
-
-        // --- API & Data ---
+// --- API & Data ---
         async function callApiProxy(payload) { 
             const res = await fetch('/api/proxy', { 
                 method: 'POST', 
@@ -648,9 +718,46 @@
             return res.json();
         }
         
-        async function generateItinerary(e) { e.preventDefault(); toggleLoading('planner-form', true, 'Generating...'); 
+        async function generateItinerary(e) { 
+            e.preventDefault(); 
+            toggleLoading('planner-form', true, 'Generating...'); 
+            
+            // *** NEW: Get preferences to add to the form data ***
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            // Get saved preferences
+            const savedBudget = userProfile?.default_budget;
+            const savedDiet = userProfile?.dietary_needs;
+            const savedInterests = userProfile?.default_interests;
+
+            // Combine interests: user's input + saved interests
+            const combinedInterests = [savedInterests, data.interests].filter(Boolean).join(', ');
+            data.interests = combinedInterests;
+
+            // Add dietary needs to interests string
+            if (savedDiet) {
+                data.interests = `User has dietary needs: ${savedDiet}. ${data.interests}`;
+            }
+
+            // Override budget if a default is set and user didn't select one
+            // (Assuming 'Moderate' is the default value of the select if untouched)
+            if (savedBudget && data.budget === 'Moderate') {
+                 // Note: This logic assumes 'Moderate' is the default.
+                 // A better way, but for now, we'll just check if a default is set.
+                 // Let's just override if the user has a preference set.
+                 data.budget = savedBudget;
+            }
+            // If user *manually* selected "Low Budget" or "Extravagance", we respect that.
+            // But if they have a saved pref, let's use that.
+            if(savedBudget) {
+                data.budget = savedBudget;
+                // Also update the form UI to match
+                document.getElementById('budget').value = savedBudget;
+            }
+
+
             try { 
-                const data = Object.fromEntries(new FormData(e.target).entries());
                 // *** Apply &amp; fix to form data before sending ***
                 data['staying-at'] = decodeHTMLEntities(data['staying-at']);
                 data.interests = decodeHTMLEntities(data.interests);
@@ -806,7 +913,7 @@
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
             // *** NEW, CORRECTED AUTH LOGIC ***
-            supabaseClient.auth.onAuthStateChange((event, session) => {
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 console.log("Auth Event:", event); // For debugging
                 
                 const user = session?.user;
@@ -816,6 +923,33 @@
                     // User is signed in or session is restored
                     currentUserId = user.id;
                     currentUserName = user.user_metadata?.full_name || 'Friend';
+                    
+                    // *** NEW: Fetch or create user profile ***
+                    const { data: profileData, error: profileError } = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', currentUserId)
+                        .single();
+
+                    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = no rows found
+                        console.error("Error fetching profile:", profileError);
+                    } else if (profileData) {
+                        userProfile = profileData;
+                    } else {
+                        // No profile found, let's create one
+                        const { data: newProfile, error: createError } = await supabaseClient
+                            .from('profiles')
+                            .insert({ id: currentUserId })
+                            .select()
+                            .single();
+                        
+                        if (createError) {
+                            console.error("Error creating profile:", createError);
+                        } else {
+                            userProfile = newProfile;
+                        }
+                    }
+                    // *** END NEW PROFILE LOGIC ***
                     
                     if (event === 'SIGNED_IN') {
                         // This happens *after* magic link click
@@ -834,23 +968,15 @@
                     isUserLoggedIn = false;
                     currentUserId = 'anonymous_user';
                     currentUserName = 'Anonymous';
+                    userProfile = null; // Clear profile
 
-                    // *** THIS IS THE FIX ***
-                    // Only show the login modal if this is the *first* auth event
-                    // AND it's an empty session (i.e., not a magic link redirect).
-                    // If the user is clicking a magic link, the URL will have a hash.
                     if (event === 'INITIAL_SESSION' && !session && !window.location.hash.includes('access_token')) {
-                         // This is the first load, user is not logged in, and NOT a magic link.
-                         // It is safe to show the login modal.
                          setUIState(false); 
-                         switchTab('planner-panel'); // Default to planner tab, but modal will be on top
+                         switchTab('planner-panel');
                     } else if (event === 'SIGNED_OUT') {
-                         // If user *explicitly* logs out, show modal immediately.
                          setUIState(false); 
                          switchTab('planner-panel');
                     }
-                    // If it's INITIAL_SESSION and *there is* a hash, we do *nothing*.
-                    // We wait for the 'SIGNED_IN' event to fire.
                 }
             });
             // *** END OF NEW AUTH LOGIC ***
@@ -859,14 +985,12 @@
             document.getElementById('qa-form').addEventListener('submit', handleQaSubmit);
             document.getElementById('feedback-form').addEventListener('submit', handleFeedbackSubmit);
             document.getElementById('planner-form').addEventListener('submit', generateItinerary);
+            document.getElementById('profile-form').addEventListener('submit', handleProfileSave); // *** NEW Event Listener ***
+            
             document.getElementById('search-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('search-form', true, 'Searching...'); try { const res = await callApiProxy({ type: 'groundedSearch', query: document.getElementById('query').value }); document.getElementById('search-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('search-title').classList.remove('hidden'); } catch(e){displayMessage('Search failed','error')} finally { toggleLoading('search-form', false); } });
             document.getElementById('packing-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('packing-form', true, 'Packing...'); try { const res = await callApiProxy({ type: 'packingList', data: Object.fromEntries(new FormData(e.target).entries()) }); document.getElementById('packing-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('packing-title').classList.remove('hidden'); } catch(e){} finally { toggleLoading('packing-form', false); } });
             document.getElementById('flights-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('flights-form', true, 'Flying...'); try { const res = await callApiProxy({ type: 'flights', data: Object.fromEntries(new FormData(e.target).entries()) }); document.getElementById('flights-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('flights-title').classList.remove('hidden'); } catch(e){} finally { toggleLoading('flights-form', false); } });
             document.getElementById('convert-btn-standalone').onclick = async () => { toggleLoading('converter-form-standalone', true, ''); try { const res = await callApiProxy({ type: 'currency', amount: document.getElementById('convert-amount-standalone').value, from: document.getElementById('convert-from-standalone').value, to: document.getElementById('convert-to-standalone').value }); document.getElementById('converter-result-standalone').textContent = res.candidates[0].content.parts[0].text; } catch(e){} finally { toggleLoading('converter-form-standalone', false, 'Convert'); } };
-            
-            // We no longer call switchTab here; auth logic handles it.
-            // If user is not logged in, setUIState(false) will run and show the login modal.
-            // If user IS logged in, auth logic will call setUIState(true) and switch to the planner tab.
             
             CURRENCIES.forEach(c => { const o = `<option value="${c.code}">${c.code} - ${c.name}</option>`; document.getElementById('convert-from-standalone').innerHTML += o; document.getElementById('convert-to-standalone').innerHTML += o; });
             document.getElementById('convert-from-standalone').value = 'USD'; document.getElementById('convert-to-standalone').value = 'EUR';
