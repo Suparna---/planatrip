@@ -318,6 +318,7 @@
     </div>
     
     <nav class="mobile-nav md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg"><div class="max-w-4xl mx-auto flex justify-around"><button id="nav-search" onclick="switchTab('search-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg><span class="text-xs font-medium">Research</span></button><button id="nav-planner" onclick="switchTab('planner-panel')" class="flex flex-col items-center justify-center p-3 text-indigo-600 dark:text-indigo-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="text-xs font-medium">Planner</span></button><button id="nav-flights" onclick="switchTab('flights-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg><span class="text-xs font-medium">Flights</span></button><button id="nav-converter" onclick="switchTab('converter-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg><span class="text-xs font-medium">Currency</span></button></div></nav>
+
 <script>
         // --- Globals & Constants ---
         let currentItineraryData = null, recentItineraries = [];
@@ -422,19 +423,18 @@
             document.getElementById('login-text').textContent = isLoggedIn ? 'Logout' : 'Login';
             document.getElementById('login-btn').classList.toggle('bg-red-600', isLoggedIn);
             
-            // *** NEW: Show/Hide Profile Button ***
             const profileBtn = document.getElementById('profile-btn');
             
             if (isLoggedIn) { 
                 document.getElementById('app-container').classList.remove('app-locked'); 
                 document.getElementById('login-modal').style.display = 'none'; 
                 document.getElementById('feedback-btn').style.display = 'flex'; 
-                profileBtn.style.display = 'flex'; // Show profile button
+                profileBtn.style.display = 'flex'; 
             } else { 
                 document.getElementById('app-container').classList.add('app-locked'); 
                 document.getElementById('login-modal').style.display = 'flex'; 
                 document.getElementById('feedback-btn').style.display = 'none'; 
-                profileBtn.style.display = 'none'; // Hide profile button
+                profileBtn.style.display = 'none'; 
                 currentItineraryData = null; 
                 recentItineraries = []; 
                 renderItinerary(null); 
@@ -456,7 +456,7 @@
         window.openFeedbackModal = function() { if (!isUserLoggedIn) return displayMessage('Login to verify.', 'error'); document.getElementById('feedback-modal').classList.remove('hidden'); }
         window.closeFeedbackModal = function() { document.getElementById('feedback-modal').classList.add('hidden'); }
 
-        // *** NEW PROFILE MODAL FUNCTIONS ***
+        // *** PROFILE MODAL FUNCTIONS ***
         window.openProfileModal = function() {
             if (!isUserLoggedIn || !userProfile) {
                 displayMessage('Login to set preferences.', 'error');
@@ -483,20 +483,21 @@
                 default_budget: document.getElementById('profile-budget').value,
                 dietary_needs: document.getElementById('profile-diet').value,
                 default_interests: document.getElementById('profile-interests').value,
-                created_at: new Date(), // Supabase handles this, but good to have
+                // created_at is handled by default
             };
 
             // 'upsert' means: update if exists, or insert if new.
             const { data, error } = await supabaseClient
                 .from('profiles')
                 .upsert(newProfile)
-                .select(); // Must .select() to get the data back
+                .select()
+                .single(); // We expect one row back
 
             if (error) {
                 console.error('Error saving profile:', error);
                 displayMessage(`Error: ${error.message}`, 'error');
             } else {
-                userProfile = data[0]; // Update local profile
+                userProfile = data; // Update local profile
                 displayMessage('Preferences saved!');
                 closeProfileModal();
             }
@@ -725,6 +726,7 @@
             // *** NEW: Get preferences to add to the form data ***
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
+            const userBudget = data.budget; // Get what user *just* selected
 
             // Get saved preferences
             const savedBudget = userProfile?.default_budget;
@@ -732,6 +734,7 @@
             const savedInterests = userProfile?.default_interests;
 
             // Combine interests: user's input + saved interests
+            // filter(Boolean) removes any empty strings
             const combinedInterests = [savedInterests, data.interests].filter(Boolean).join(', ');
             data.interests = combinedInterests;
 
@@ -740,22 +743,17 @@
                 data.interests = `User has dietary needs: ${savedDiet}. ${data.interests}`;
             }
 
-            // Override budget if a default is set and user didn't select one
-            // (Assuming 'Moderate' is the default value of the select if untouched)
-            if (savedBudget && data.budget === 'Moderate') {
-                 // Note: This logic assumes 'Moderate' is the default.
-                 // A better way, but for now, we'll just check if a default is set.
-                 // Let's just override if the user has a preference set.
+            // *** BUG FIX FOR ITINERARY GENERATION ***
+            // Only apply the saved budget if the user *did not* make a new choice.
+            // 'Moderate' is the default value, so if it's still 'Moderate', we check for a pref.
+            if (savedBudget && userBudget === 'Moderate') {
                  data.budget = savedBudget;
+                 // Also update the form UI to show the pref we're using
+                 document.getElementById('budget').value = savedBudget;
+            } else {
+                // User *did* make a choice (e.g., "Extravagance" or "Low Budget")
+                // So we respect data.budget as-is.
             }
-            // If user *manually* selected "Low Budget" or "Extravagance", we respect that.
-            // But if they have a saved pref, let's use that.
-            if(savedBudget) {
-                data.budget = savedBudget;
-                // Also update the form UI to match
-                document.getElementById('budget').value = savedBudget;
-            }
-
 
             try { 
                 // *** Apply &amp; fix to form data before sending ***
@@ -912,7 +910,7 @@
         async function main() {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            // *** NEW, CORRECTED AUTH LOGIC ***
+            // *** NEW, CORRECTED AUTH LOGIC (FIXES LOGIN BUG) ***
             supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 console.log("Auth Event:", event); // For debugging
                 
@@ -970,13 +968,22 @@
                     currentUserName = 'Anonymous';
                     userProfile = null; // Clear profile
 
+                    // *** THIS IS THE FIX ***
+                    // Only show the login modal if this is the *first* auth event
+                    // AND it's an empty session (i.e., not a magic link redirect).
+                    // If the user is clicking a magic link, the URL will have a hash.
                     if (event === 'INITIAL_SESSION' && !session && !window.location.hash.includes('access_token')) {
+                         // This is the first load, user is not logged in, and NOT a magic link.
+                         // It is safe to show the login modal.
                          setUIState(false); 
-                         switchTab('planner-panel');
+                         switchTab('planner-panel'); // Default to planner tab, but modal will be on top
                     } else if (event === 'SIGNED_OUT') {
+                         // If user *explicitly* logs out, show modal immediately.
                          setUIState(false); 
                          switchTab('planner-panel');
                     }
+                    // If it's INITIAL_SESSION and *there is* a hash, we do *nothing*.
+                    // We wait for the 'SIGNED_IN' event to fire.
                 }
             });
             // *** END OF NEW AUTH LOGIC ***
@@ -991,6 +998,10 @@
             document.getElementById('packing-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('packing-form', true, 'Packing...'); try { const res = await callApiProxy({ type: 'packingList', data: Object.fromEntries(new FormData(e.target).entries()) }); document.getElementById('packing-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('packing-title').classList.remove('hidden'); } catch(e){} finally { toggleLoading('packing-form', false); } });
             document.getElementById('flights-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('flights-form', true, 'Flying...'); try { const res = await callApiProxy({ type: 'flights', data: Object.fromEntries(new FormData(e.target).entries()) }); document.getElementById('flights-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('flights-title').classList.remove('hidden'); } catch(e){} finally { toggleLoading('flights-form', false); } });
             document.getElementById('convert-btn-standalone').onclick = async () => { toggleLoading('converter-form-standalone', true, ''); try { const res = await callApiProxy({ type: 'currency', amount: document.getElementById('convert-amount-standalone').value, from: document.getElementById('convert-from-standalone').value, to: document.getElementById('convert-to-standalone').value }); document.getElementById('converter-result-standalone').textContent = res.candidates[0].content.parts[0].text; } catch(e){} finally { toggleLoading('converter-form-standalone', false, 'Convert'); } };
+            
+            // We no longer call switchTab here; auth logic handles it.
+            // If user is not logged in, setUIState(false) will run and show the login modal.
+            // If user IS logged in, auth logic will call setUIState(true) and switch to the planner tab.
             
             CURRENCIES.forEach(c => { const o = `<option value="${c.code}">${c.code} - ${c.name}</option>`; document.getElementById('convert-from-standalone').innerHTML += o; document.getElementById('convert-to-standalone').innerHTML += o; });
             document.getElementById('convert-from-standalone').value = 'USD'; document.getElementById('convert-to-standalone').value = 'EUR';
