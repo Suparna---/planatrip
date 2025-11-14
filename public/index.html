@@ -122,7 +122,7 @@
                                 <div class="flex items-center justify-between mb-1"><label for="cities" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cities</label><button type="button" onclick="openFieldSearch('cities', 'City')" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-full p-1 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button></div>
                                 <input type="text" id="cities" name="cities" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Rome, Florence">
                             </div>
-                            <div class="col-span-1 md:col-span-3"><label for="staying-at(Your starting place)" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Staying At (Optional)</label><input type="text" id="staying-at" name="staying-at" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Hotel Artemide"></div>
+                            <div class="col-span-1 md:col-span-3"><label for="staying-at/starting place" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Staying At (Optional)</label><input type="text" id="staying-at" name="staying-at" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Hotel Artemide"></div>
                         </div>
                         <div class="grid grid-cols-3 md:grid-cols-5 gap-4">
                             <div><label for="duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</label><input type="number" id="duration" name="duration" required min="1" max="30" value="3" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
@@ -222,7 +222,7 @@
         const SUPABASE_URL = 'https://omwqfqzcighrmqoogmxj.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9td3FmcXpjaWdocm1xb29nbXhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2NTQwNzYsImV4cCI6MjA3NjIzMDA3Nn0.pVPKedBrEBj3QNsc5eELj8ARWvuqfAyyWIuwS6RWsHk';
         let supabaseClient = null, isUserLoggedIn = false, currentUserId = 'anonymous_user', currentUserName = 'Anonymous';
-        const CURRENCIES = [ { code: "USD", name: "US Dollar", defaultFrom: true }, { code: "EUR", name: "Euro", defaultTo: true }, { code: "GBP", name: "British Pound" }, { code: "JPY", name: "Japanese Yen" }, { code: "CAD", name: "Canadian Dollar" }, { code: "AUD", name: "Australian Dollar" }, { code: "CHF", name: "Swiss Franc" }, { code: "CNY", name: "Chinese Yuan" }, { code: "INR", name: "Indian Rupee" }, { code: "HKD", name: "Hong Kong Dollar" }, { code: "NZD", name: "New Zealand Dollar" }, { code: "SEK", name: "Swedish Krona" }, { code: "KRW", name: "South Korean Won" }, { code: "SGD", name: "Singapore Dollar" }, { code: "NOK", name: "Norwegian Krone" }, { code: "MXN", name: "Mexican Peso" }, { code: "RUB", name: "Russian Ruble" }, { code: "ZAR", name: "South African Rand" }, { code: "TRY", name: "Turkish Lira" }, { code: "BRL", name: "Brazilian Real" } ];
+        const CURRENCIES = [ { code: "USD", name: "US Dollar", defaultFrom: true }, { code: "EUR", name: "Euro", defaultTo: true }, { code: "GBP", name: "British Pound" }, { code: "JPY", name: "Japanese Yen" }, { code: "CAD", name: "Canadian Dollar" }, { code: "AUD", name: "Australian Dollar" }, { code: "CHF", name: "Swiss Franc" }, { code: "CNY", name: "Chinese Yuan" }, { code: "INR", name: "Indian Rupee" }, { code: "HKD", name: "Hong Kong Dollar" }, { code: "NZD", name:"New Zealand Dollar" }, { code: "SEK", name: "Swedish Krona" }, { code: "KRW", name: "South Korean Won" }, { code: "SGD", name: "Singapore Dollar" }, { code: "NOK", name: "Norwegian Krone" }, { code: "MXN", name: "Mexican Peso" }, { code: "RUB", name: "Russian Ruble" }, { code: "ZAR", name: "South African Rand" }, { code: "TRY", name: "Turkish Lira" }, { code: "BRL", name: "Brazilian Real" } ];
 
         // --- UI Logic ---
         function setDarkMode(isDark) {
@@ -248,6 +248,70 @@
         function getCrowdBadge(l) { const c = { high: 'bg-red-100 text-red-700', moderate: 'bg-yellow-100 text-yellow-700', low: 'bg-green-100 text-green-700' }; return l ? `<span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ${c[l.toLowerCase()]||'bg-gray-200'}">Crowd: ${l}</span>` : ''; }
         function getStarClass(d) { const m = d?.match(/(\d)-star/i); return `stars-${m?Math.min(5,Math.max(0,parseInt(m[1]))):0}`; }
         window.openFieldSearch = function(id, name) { const v = document.getElementById(id).value.trim(); if (!v) { displayMessage(`Enter a ${name} first.`, 'error'); return; } openQaModal(v); }
+        
+        // *** FIX: Restored the missing switchTab function ***
+        window.switchTab = function(panelId) {
+            // Hide all panels
+            document.getElementById('search-panel').classList.add('hidden');
+            document.getElementById('planner-panel').classList.add('hidden');
+            document.getElementById('flights-panel').classList.add('hidden');
+            document.getElementById('converter-panel').classList.add('hidden');
+
+            // Show the selected panel
+            document.getElementById(panelId).classList.remove('hidden');
+
+            // --- Desktop Tab Styling ---
+            const desktopTabs = ['tab-search', 'tab-planner', 'tab-flights', 'tab-converter'];
+            const desktopPanelMap = {
+                'search-panel': 'tab-search',
+                'planner-panel': 'tab-planner',
+                'flights-panel': 'tab-flights',
+                'converter-panel': 'tab-converter'
+            };
+            const activeDesktopTab = desktopPanelMap[panelId];
+
+            desktopTabs.forEach(tabId => {
+                const tab = document.getElementById(tabId);
+                if (tab) {
+                    tab.classList.remove('border-indigo-600', 'text-indigo-600', 'dark:border-indigo-400', 'dark:text-indigo-400');
+                    tab.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                }
+            });
+
+            if (activeDesktopTab) {
+                const tab = document.getElementById(activeDesktopTab);
+                if (tab) {
+                    tab.classList.add('border-indigo-600', 'text-indigo-600', 'dark:border-indigo-400', 'dark:text-indigo-400');
+                    tab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                }
+            }
+
+            // --- Mobile Nav Styling ---
+            const mobileNavs = ['nav-search', 'nav-planner', 'nav-flights', 'nav-converter'];
+            const mobilePanelMap = {
+                'search-panel': 'nav-search',
+                'planner-panel': 'nav-planner',
+                'flights-panel': 'nav-flights',
+                'converter-panel': 'nav-converter'
+            };
+            const activeMobileNav = mobilePanelMap[panelId];
+
+            mobileNavs.forEach(navId => {
+                const nav = document.getElementById(navId);
+                if (nav) {
+                    nav.classList.remove('text-indigo-600', 'dark:text-indigo-400');
+                    nav.classList.add('text-gray-500', 'dark:text-gray-400');
+                }
+            });
+
+            if (activeMobileNav) {
+                const nav = document.getElementById(activeMobileNav);
+                if (nav) {
+                    nav.classList.add('text-indigo-600', 'dark:text-indigo-400');
+                    nav.classList.remove('text-gray-500', 'dark:text-gray-400');
+                }
+            }
+        }
         
         // --- Modals ---
         window.openQaModal = function(c) { document.getElementById('qa-modal').classList.remove('hidden'); document.getElementById('qa-context').textContent = c; document.getElementById('qa-question').value = ''; document.getElementById('qa-answer-container').classList.add('hidden'); }
@@ -313,29 +377,38 @@
                 // Update local data
                 const item = recentItineraries.find(i => i.id === currentItineraryId);
                 if (item) item.is_favorite = !isFav;
+                // *** FIX: Refresh the history dropdown to show the star ***
+                populateHistoryDropdown();
             }
         }
 
         window.downloadPDF = function() {
             if (!currentItineraryData) return displayMessage('No itinerary to download.', 'error');
+            
+            // Scroll to top to ensure canvas captures everything
+            window.scrollTo(0,0); 
+            
             const element = document.getElementById('planner-content');
             const header = document.getElementById('itinerary-header').innerHTML;
             
             // Create a temp container for the PDF content
             const container = document.createElement('div');
+            container.id = 'pdf-render-container';
             
-            // Add styles to make it render off-screen but still be in the DOM
+            // Add styles to make it renderable but not visible
             container.style.position = 'absolute';
-            container.style.left = '-9999px';
+            container.style.left = '0';
             container.style.top = '0';
             container.style.width = '800px'; // Set a reasonable width for rendering
+            container.style.visibility = 'hidden'; // Hide it but keep in layout
+            container.style.zIndex = '-1000'; // Send it to the back
 
             container.innerHTML = `
                 <div style="padding: 20px; font-family: sans-serif; color: #333; width: 100%;">
                     <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px;">
                         <h1 style="color: #4f46e5; margin: 0;">TravelHub</h1>
                         <p style="margin: 5px 0 0 0; color: #666;">Your AI Travel Itinerary</p>
-                        <p style"margin: 2px 0; color: #888; font-size: 12px;">www.planatrip.xyz</p>
+                        <p style="margin: 2px 0; color: #888; font-size: 12px;">www.planatrip.xyz</p>
                     </div>
                     ${header}
                     <div style="margin-top: 20px;">
@@ -360,10 +433,14 @@
 
             // Run html2pdf and *then* remove the element
             html2pdf().from(container).set(opt).save().then(() => {
-                document.body.removeChild(container);
+                if (document.getElementById('pdf-render-container')) {
+                    document.body.removeChild(container);
+                }
             }).catch((err) => {
                 console.error('PDF generation failed:', err);
-                document.body.removeChild(container);
+                if (document.getElementById('pdf-render-container')) {
+                    document.body.removeChild(container);
+                }
                 displayMessage('Error generating PDF.', 'error');
             });
         }
@@ -420,7 +497,7 @@
                     <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Budget</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${budgetTier}</dd></div>
                     <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Travelers</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${numberOfPeople}</dd></div>
                     <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Cost/Head</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">$${costPerHeadUSD}</dd></div>
-                    <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Season</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${bestSeasonToVisit}</dd></div>
+                    <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Season</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-1Team: </dd></div>
                 </div>
             `;
 
@@ -463,7 +540,11 @@
             CURRENCIES.forEach(c => { const o = `<option value="${c.code}">${c.code} - ${c.name}</option>`; document.getElementById('convert-from-standalone').innerHTML += o; document.getElementById('convert-to-standalone').innerHTML += o; });
             document.getElementById('convert-from-standalone').value = 'USD'; document.getElementById('convert-to-standalone').value = 'EUR';
             setDarkMode(document.documentElement.classList.contains('dark'));
-            if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+            
+            // FIX: Only register service worker if not in a blob: preview environment
+            if ('serviceWorker' in navigator && !window.location.protocol.startsWith('blob:')) {
+                navigator.serviceWorker.register('sw.js');
+            }
         }
         document.addEventListener('DOMContentLoaded', main);
     </script>
