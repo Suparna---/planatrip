@@ -281,7 +281,8 @@
     </div>
     
     <nav class="mobile-nav md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg"><div class="max-w-4xl mx-auto flex justify-around"><button id="nav-search" onclick="switchTab('search-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg><span class="text-xs font-medium">Research</span></button><button id="nav-planner" onclick="switchTab('planner-panel')" class="flex flex-col items-center justify-center p-3 text-indigo-600 dark:text-indigo-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="text-xs font-medium">Planner</span></button><button id="nav-flights" onclick="switchTab('flights-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg><span class="text-xs font-medium">Flights</span></button><button id="nav-converter" onclick="switchTab('converter-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg><span class="text-xs font-medium">Currency</span></button></div></nav>
-<script>
+
+    <script>
         // --- Globals & Constants ---
         let currentItineraryData = null, recentItineraries = [];
         let currentItineraryId = null; // Store ID to update favorites
@@ -345,6 +346,7 @@
         // *** NEW FUNCTION TO FIX &amp; BUG ***
         function decodeHTMLEntities(text) {
             if (typeof text !== 'string') return text;
+            // Use a textarea to safely decode entities
             const temp = document.createElement('textarea');
             temp.innerHTML = text;
             return temp.value;
@@ -356,6 +358,7 @@
             temp.textContent = str; 
             return temp.innerHTML; 
         }
+        
         function deepSanitize(data) { 
             if (data === null || data === undefined) { return data; } 
             if (Array.isArray(data)) { return data.map(item => deepSanitize(item)); } 
@@ -363,21 +366,37 @@
                 const sanitizedObject = {}; 
                 for (const key in data) { 
                     if (Object.prototype.hasOwnProperty.call(data, key)) { 
-                        sanitizedObject[key] = deepSanitize(data[key]); 
+                        // We must sanitize recursively *first*
+                        const sanitizedValue = deepSanitize(data[key]);
+                        // Then apply decode *after* sanitizing
+                        sanitizedObject[key] = decodeHTMLEntities(sanitizedValue);
                     } 
                 } 
                 return sanitizedObject; 
-            } 
-            // *** APPLY DECODING FIX HERE ***
-            // We decode *after* sanitizing to prevent injection
-            return decodeHTMLEntities(data);
+            }
+            if (typeof data === 'string') {
+                // For simple strings, just decode.
+                return decodeHTMLEntities(data);
+            }
+            return data;
         }
+
 
         function setUIState(isLoggedIn) {
             document.getElementById('login-text').textContent = isLoggedIn ? 'Logout' : 'Login';
             document.getElementById('login-btn').classList.toggle('bg-red-600', isLoggedIn);
-            if (isLoggedIn) { document.getElementById('app-container').classList.remove('app-locked'); document.getElementById('login-modal').style.display = 'none'; document.getElementById('feedback-btn').style.display = 'flex'; } 
-            else { document.getElementById('app-container').classList.add('app-locked'); document.getElementById('login-modal').style.display = 'flex'; document.getElementById('feedback-btn').style.display = 'none'; currentItineraryData = null; recentItineraries = []; renderItinerary(null); }
+            if (isLoggedIn) { 
+                document.getElementById('app-container').classList.remove('app-locked'); 
+                document.getElementById('login-modal').style.display = 'none'; 
+                document.getElementById('feedback-btn').style.display = 'flex'; 
+            } else { 
+                document.getElementById('app-container').classList.add('app-locked'); 
+                document.getElementById('login-modal').style.display = 'flex'; 
+                document.getElementById('feedback-btn').style.display = 'none'; 
+                currentItineraryData = null; 
+                recentItineraries = []; 
+                renderItinerary(null); 
+            }
         }
         window.handleLoginClick = async function() { if (!supabaseClient) return; if (isUserLoggedIn) { await supabaseClient.auth.signOut(); } }
         window.initiateMagicLink = async function(e) { e.preventDefault(); const email = document.getElementById('auth-email').value, name = document.getElementById('auth-name').value; if (!email || !name) { displayMessage('Please enter name and email.', 'error'); return; } toggleLoading('magic-link-form', true, 'Sending...'); const { error } = await supabaseClient.auth.signInWithOtp({ email: email, options: { data: { full_name: name } } }); toggleLoading('magic-link-form', false); if (error) displayMessage(`Auth Error: ${error.message}`, 'error'); else { document.getElementById('login-modal').style.display = 'none'; displayMessage(`Magic link sent to ${email}.`, 'info'); } }
@@ -778,7 +797,40 @@
         // Init
         async function main() {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            supabaseClient.auth.onAuthStateChange((e, s) => { isUserLoggedIn = !!s?.user; if(isUserLoggedIn) { currentUserId = s.user.id; currentUserName = s.user.user_metadata?.full_name; displayMessage(`Welcome ${currentUserName}`); loadItineraries(); } setUIState(isLoggedIn); });
+            
+            // *** NEW, CORRECTED AUTH LOGIC ***
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                console.log("Auth Event:", event); // For debugging
+                
+                const user = session?.user;
+                isUserLoggedIn = !!user;
+
+                if (user) {
+                    currentUserId = user.id;
+                    currentUserName = user.user_metadata?.full_name || 'Friend';
+                    
+                    if (event === 'SIGNED_IN') {
+                        // This happens on magic link click
+                        setUIState(true);
+                        displayMessage(`Welcome ${currentUserName}!`); 
+                        loadItineraries();
+                        switchTab('planner-panel'); // Show planner
+                    } else if (event === 'INITIAL_SESSION') {
+                        // This happens on page refresh when already logged in
+                        setUIState(true);
+                        loadItineraries();
+                        switchTab('planner-panel'); // Show planner
+                    }
+                } else {
+                    // This happens on SIGNED_OUT or if INITIAL_SESSION is empty
+                    isUserLoggedIn = false;
+                    currentUserId = 'anonymous_user';
+                    currentUserName = 'Anonymous';
+                    setUIState(false); // This will show the login modal
+                }
+            });
+            // *** END OF NEW AUTH LOGIC ***
+
             document.getElementById('magic-link-form').addEventListener('submit', initiateMagicLink);
             document.getElementById('qa-form').addEventListener('submit', handleQaSubmit);
             document.getElementById('feedback-form').addEventListener('submit', handleFeedbackSubmit);
@@ -788,7 +840,10 @@
             document.getElementById('flights-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('flights-form', true, 'Flying...'); try { const res = await callApiProxy({ type: 'flights', data: Object.fromEntries(new FormData(e.target).entries()) }); document.getElementById('flights-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('flights-title').classList.remove('hidden'); } catch(e){} finally { toggleLoading('flights-form', false); } });
             document.getElementById('convert-btn-standalone').onclick = async () => { toggleLoading('converter-form-standalone', true, ''); try { const res = await callApiProxy({ type: 'currency', amount: document.getElementById('convert-amount-standalone').value, from: document.getElementById('convert-from-standalone').value, to: document.getElementById('convert-to-standalone').value }); document.getElementById('converter-result-standalone').textContent = res.candidates[0].content.parts[0].text; } catch(e){} finally { toggleLoading('converter-form-standalone', false, 'Convert'); } };
             
-            switchTab('planner-panel');
+            // We no longer call switchTab here; auth logic handles it.
+            // If user is not logged in, setUIState(false) will run and show the login modal.
+            // If user IS logged in, auth logic will call setUIState(true) and switch to the planner tab.
+            
             CURRENCIES.forEach(c => { const o = `<option value="${c.code}">${c.code} - ${c.name}</option>`; document.getElementById('convert-from-standalone').innerHTML += o; document.getElementById('convert-to-standalone').innerHTML += o; });
             document.getElementById('convert-from-standalone').value = 'USD'; document.getElementById('convert-to-standalone').value = 'EUR';
             setDarkMode(document.documentElement.classList.contains('dark'));
