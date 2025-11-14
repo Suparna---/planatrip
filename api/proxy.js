@@ -15,17 +15,16 @@ export default async function handler(req, res) {
         return;
     }
 
-    // This v1beta endpoint and model name is correct.
-    const API_URL_BASE = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`;
-    
-    const apiUrl = `${API_URL_BASE}?key=${API_KEY}`;
-
     const { type, ...body } = req.body;
     let payload;
+    let apiUrl; // We define this here because different models use different URLs
 
     // Based on the 'type' from the frontend, construct the correct payload
     switch (type) {
         case 'itinerary':
+            // Set API URL for Gemini model
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
+            
             const data = body.data;
             
             const prompt = `
@@ -43,9 +42,11 @@ User Request:
 - Accommodation: ${data['accommodation-type']}
 - Interests: ${data.interests || 'N/A'}
 
-IMPORTANT INSTRUCTION:
-If "Staying At" is specific (not 'Central location'), you MUST assume the user starts their day there. 
-Optimise the daily order of activities to minimize travel time from that starting point.
+IMPORTANT INSTRUCTIONS:
+1.  If "Staying At" is specific (not 'Central location'), you MUST assume the user starts their day there. 
+    Optimise the daily order of activities to minimize travel time from that starting point.
+2.  **PERSONAL TOUCH:** For each day, provide one or two specific suggestions for lunch and dinner as a \`foodSuggestion\`. 
+    These should be relevant to the day's activities and location (e.g., "For dinner, try the famous biryani at Saravana Bhavan near the temple.").
 
 JSON Schema Instructions:
 1.  **title**: Generate a concise, catchy title for the trip (e.g., "3-Day Foodie Tour of Rome").
@@ -55,7 +56,7 @@ JSON Schema Instructions:
 5.  **costPerHeadUSD**: Estimate a reasonable cost per person in USD (number only).
 6.  **bestSeasonToVisit**: Suggest the best season to visit (e.g., "Spring (April-June)").
 7.  **days**: Create an array for each day.
-8.  **day object**: Each day *must* have a "day" number, "theme", "city", "transportation_tip", and an "activities" array.
+8.  **day object**: Each day *must* have a "day" number, "theme", "city", "transportation_tip", "foodSuggestion", and an "activities" array.
 9.  **activity object**: Each activity *must* have a "name", "type","details", "address", "approxCostUSD", and "crowdLevel" (Low, Moderate, or High).
 
 IMPORTANT: Your entire response must be ONLY the JSON object, starting with { and ending with }.
@@ -85,7 +86,8 @@ IMPORTANT: Your entire response must be ONLY the JSON object, starting with { an
                                         day: { type: "NUMBER" }, 
                                         theme: { type: "STRING" }, 
                                         city: { type: "STRING" }, 
-                                        transportation_tip: { type: "STRING" }, 
+                                        transportation_tip: { type: "STRING" },
+                                        foodSuggestion: { type: "STRING" }, // <-- NEW FIELD
                                         activities: { 
                                             type: "ARRAY", 
                                             items: { 
@@ -102,7 +104,7 @@ IMPORTANT: Your entire response must be ONLY the JSON object, starting with { an
                                             } 
                                         } 
                                     }, 
-                                    required: ["day", "theme", "city", "activities", "transportation_tip"] 
+                                    required: ["day", "theme", "city", "activities", "transportation_tip", "foodSuggestion"] // <-- NEW FIELD
                                 } 
                             } 
                         },
@@ -122,6 +124,7 @@ IMPORTANT: Your entire response must be ONLY the JSON object, starting with { an
             break;
         
         case 'groundedSearch':
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
             payload = {
                 contents: [{ parts: [{ text: body.query }] }],
                 tools: [{ "google_search": {} }]
@@ -129,6 +132,7 @@ IMPORTANT: Your entire response must be ONLY the JSON object, starting with { an
             break;
 
         case 'contextualQa':
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
             const { context, question } = body;
             const qaPrompt = `Regarding the travel activity or location "${context}", please provide a concise and helpful answer to the following user question: "${question}"`;
             payload = {
@@ -138,6 +142,7 @@ IMPORTANT: Your entire response must be ONLY the JSON object, starting with { an
             break;
             
         case 'flights':
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
             const flightData = body.data;
             const flightPrompt = `Find the cheapest flight options from ${flightData['flight-origin']} to ${flightData['flight-destination']}, departing on ${flightData['flight-depart-date']}${flightData['flight-return-date'] ? ` and returning on ${flightData['flight-return-date']}` : ''} for ${flightData['flight-travelers']} traveler(s) in ${flightData['flight-cabin']} class. Summarize the best 2-3 options. IMPORTANT: Make sure all airline names are enclosed in asterisks to make them bold, for example **IndiGo** or **SriLankan Airlines**.`;
             payload = {
@@ -147,6 +152,7 @@ IMPORTANT: Your entire response must be ONLY the JSON object, starting with { an
             break;
 
         case 'packingList':
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
             const packData = body.data;
             const packPrompt = `Generate a detailed packing list for a trip to ${packData['pack-destination']} for ${packData['pack-duration']} days, during the ${packData['pack-season']}. Special activities include: ${packData['pack-activities']}. Format the output as a Markdown list.`;
             
@@ -154,10 +160,29 @@ IMPORTANT: Your entire response must be ONLY the JSON object, starting with { an
             break;
 
         case 'currency':
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
             const currencyPrompt = `What is the current exchange rate for ${body.amount} ${body.from} to ${body.to}? Just give the final converted number and the currency code.`;
             payload = {
                 contents: [{ parts: [{ text: currencyPrompt }] }],
                 tools: [{ "google_search": {} }]
+            };
+            break;
+
+        // *** NEW CASE FOR IMAGE GENERATION ***
+        case 'generateImage':
+            // Use the Imagen 4 model URL
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${API_KEY}`;
+            
+            // We create a clean, specific prompt for a good photo.
+            const imagePrompt = `A beautiful, high-quality, professional photograph of: ${body.prompt}. Realistic, 16:9 aspect ratio.`;
+            
+            payload = {
+                instances: [
+                    { prompt: imagePrompt }
+                ],
+                parameters: {
+                    sampleCount: 1
+                }
             };
             break;
 
@@ -175,12 +200,24 @@ IMPORTANT: Your entire response must be ONLY the JSON object, starting with { an
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Failed to fetch from Gemini API');
+            throw new Error(errorData.error?.message || 'Failed to fetch from API');
         }
 
         const result = await response.json();
 
-        if (type === 'itinerary') {
+        // *** HANDLE DIFFERENT API RESPONSES ***
+        
+        if (type === 'generateImage') {
+            // Imagen 4 returns a 'predictions' array
+            if (result.predictions && result.predictions.length > 0) {
+                // Send back *only* the base64 image string
+                res.status(200).json({ base64Image: result.predictions[0].bytesBase64Encoded });
+            } else {
+                throw new Error("No image was generated.");
+            }
+        
+        } else if (type === 'itinerary') {
+            // Itinerary needs special JSON parsing
             try {
                 const jsonText = result.candidates[0].content.parts[0].text;
                 const parsedJson = JSON.parse(jsonText);
@@ -190,9 +227,12 @@ IMPORTANT: Your entire response must be ONLY the JSON object, starting with { an
                 console.error("Original text from model:", result.candidates[0]?.content?.parts[0]?.text);
                 res.status(500).json({ error: "The AI failed to generate a valid itinerary format. Please try again." });
             }
+        
         } else {
+            // Default handler for all other Gemini text responses
             res.status(200).json(result);
         }
+
     } catch (error) {
         console.error("Error in serverless function:", error);
         res.status(500).json({ error: error.message });

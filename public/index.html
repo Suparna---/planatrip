@@ -22,7 +22,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- *** PDF SCRIPT REMOVED *** -->
+    <!-- Removed PDF library -->
 
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -57,6 +57,15 @@
         .dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #f3f4f6; } .dark .prose { color: #d1d5db; }
         #qa-answer-container, #feedback-comments { max-height: 40vh; overflow-y: auto; }
         .rating-stars { display: inline-flex; flex-direction: row-reverse; } .rating-stars input { display: none; } .rating-stars label { color: #d1d5db; font-size: 2.5rem; cursor: pointer; transition: color 0.2s; } .dark .rating-stars label { color: #4b5563; } .rating-stars input:checked ~ label, .rating-stars label:hover, .rating-stars label:hover ~ label { color: #facc15; } .dark .rating-stars input:checked ~ label, .dark .rating-stars label:hover, .dark .rating-stars label:hover ~ label { color: #facc15; }
+    
+        /* *** NEW STYLE FOR IMAGE MODAL *** */
+        #image-modal-content { min-height: 300px; display: flex; justify-content: center; align-items: center; }
+        #image-modal-content img { max-height: 60vh; width: 100%; object-fit: contain; }
+        #image-modal-loader {
+            width: 50px; height: 50px; border: 5px solid #f3f3f3; 
+            border-top: 5px solid #4f46e5; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8 dark:bg-gray-950">
@@ -183,7 +192,7 @@
                             <div><label for="flight-depart-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Departure</label><input type="date" id="flight-depart-date" name="flight-depart-date" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
                             <div><label for="flight-return-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Return</label><input type="date" id="flight-return-date" name="flight-return-date" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
                             <div><label for="flight-travelers" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Travelers</label><input type="number" id="flight-travelers" name="flight-travelers" required min="1" max="10" value="1" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></div>
-                            <div><label for="flight-cabin" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cabin</label><select id="flight-cabin" name="flight-cabin" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white"><option value="Economy" selected>Economy</option><option value="Premium Economy">Premium</option><option value="Business">Business</option><option value="First">First</option></select></div>
+                            <div><label for="flight-cabin" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cabin</label><select id="flight-cabin" name="flight-cabin" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border bg-white"><option value="Economy" selected>Economy</option><option value="Premium Economy">Premium</option><option value"Business">Business</option><option value="First">First</option></select></div>
                         </div>
                         <button type="submit" id="flights-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:bg-indigo-400">Find Cheapest Flights</button>
                     </form>
@@ -213,13 +222,21 @@
         </div>
     </div>
 
+    <!-- Modals -->
     <div id="login-modal" class="modal-backdrop"><div class="modal-content"><h3 class="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mb-4 border-b pb-2 border-gray-100 dark:border-gray-700">Login / Sign Up</h3><p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Enter your details for a passwordless magic link. Your itineraries will be saved securely.</p><form id="magic-link-form" class="space-y-4"><div><label for="auth-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Your Name</label><input type="text" id="auth-name" name="auth-name" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Jane Doe"></div><div><label for="auth-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label><input type="email" id="auth-email" name="auth-email" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="you@example.com"></div><button type="submit" id="magic-link-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Send Magic Link</button></form></div></div>
     <div id="qa-modal" class="modal-backdrop hidden"><div class="modal-content"><div class="flex justify-between items-start mb-4"><h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Ask a Question</h3><button onclick="closeQaModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button></div><p class="text-sm text-gray-600 dark:text-gray-400 mb-2">About: <strong id="qa-context"></strong></p><form id="qa-form" class="space-y-4"><input type="text" id="qa-question" name="qa-question" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., What is the dress code?"><button type="submit" id="qa-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Get Answer</button></form><div id="qa-answer-container" class="mt-4 pt-4 border-t dark:border-gray-700 hidden"><div id="qa-answer" class="prose max-w-none text-gray-700 dark:text-gray-300 text-sm"></div></div></div></div>
-    <div id="feedback-modal" class="modal-backdrop hidden"><div class="modal-content"><div class="flex justify-between items-start mb-4"><h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Provide Feedback</h3><button onclick="closeFeedbackModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button></div><p class="text-sm text-gray-600 dark:text-gray-400 mb-4">We'd love to know what you think!</p><form id="feedback-form" class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Experience?</label><div class="rating-stars"><input type="radio" id="star5" name="rating" value="5"><label for="star5">★</label><input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label><input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label><input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label><input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label></div></div><div><label for="feedback-comments" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Comments</label><textarea id="feedback-comments" name="comments" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></textarea></div><button type="submit" id="feedback-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Submit</button></form></div></div>
+    <div id="feedback-modal" class="modal-backdrop hidden"><div class="modal-content"><div class="flex justify-between items-start mb-4"><h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Provide Feedback</h3><button onclick="closeFeedbackModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button></div><p class="text-sm text-gray-600 dark:text-gray-400 mb-4">We'd love to know what you think!</p><form id="feedback-form" class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Experience?</label><div class="rating-stars"><input type="radio" id="star5" name="rating" value="5"><label for="star5">★</label><input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label><input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label><input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label><input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label></div></div><div><label for="feedback-comments" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Comments</label><textarea id="feedback-comments" name="comments" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border"></textarea></div><button type="submit" id="feedback-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-7s00 transition">Submit</button></form></div></div>
+    
+    <!-- *** NEW IMAGE MODAL *** -->
+    <div id="image-modal" class="modal-backdrop hidden" onclick="closeImageModal()">
+        <div id="image-modal-content" class="modal-content" onclick="event.stopPropagation()">
+            <!-- Content (loader or image) will be injected here by JavaScript -->
+        </div>
+    </div>
     
     <nav class="mobile-nav md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg"><div class="max-w-4xl mx-auto flex justify-around"><button id="nav-search" onclick="switchTab('search-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg><span class="text-xs font-medium">Research</span></button><button id="nav-planner" onclick="switchTab('planner-panel')" class="flex flex-col items-center justify-center p-3 text-indigo-600 dark:text-indigo-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="text-xs font-medium">Planner</span></button><button id="nav-flights" onclick="switchTab('flights-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg><span class="text-xs font-medium">Flights</span></button><button id="nav-converter" onclick="switchTab('converter-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg><span class="text-xs font-medium">Currency</span></button></div></nav>
 
-    <script>
+<script>
         // --- Globals & Constants ---
         let currentItineraryData = null, recentItineraries = [];
         let currentItineraryId = null; // Store ID to update favorites
@@ -305,7 +322,36 @@
         window.openFeedbackModal = function() { if (!isUserLoggedIn) return displayMessage('Login to verify.', 'error'); document.getElementById('feedback-modal').classList.remove('hidden'); }
         window.closeFeedbackModal = function() { document.getElementById('feedback-modal').classList.add('hidden'); }
 
-        // --- NEW FEATURES: Share, Speak, PDF, Star ---
+        // *** NEW IMAGE MODAL FUNCTIONS ***
+        window.openImageModal = async function(prompt) {
+            const modal = document.getElementById('image-modal');
+            const contentDiv = document.getElementById('image-modal-content');
+            if (!modal || !contentDiv) return;
+
+            modal.classList.remove('hidden');
+            contentDiv.innerHTML = '<div id="image-modal-loader"></div>'; // Show loader
+
+            try {
+                const res = await callApiProxy({ type: 'generateImage', prompt: prompt });
+                if (res.base64Image) {
+                    contentDiv.innerHTML = `<img src="data:image/png;base64,${res.base64Image}" alt="${sanitizeHTML(prompt)}" />`;
+                } else {
+                    throw new Error('No image data received.');
+                }
+            } catch (err) {
+                console.error('Image generation failed:', err);
+                contentDiv.innerHTML = `<p class="text-red-500">Could not load image for ${sanitizeHTML(prompt)}.</p>`;
+            }
+        }
+        window.closeImageModal = function() {
+            const modal = document.getElementById('image-modal');
+            if (modal) modal.classList.add('hidden');
+            const contentDiv = document.getElementById('image-modal-content');
+            if (contentDiv) contentDiv.innerHTML = ''; // Clear content
+        }
+        // *** END OF NEW IMAGE MODAL FUNCTIONS ***
+
+        // --- NEW FEATURES: Share, Speak, Download, Star ---
         window.shareItinerary = async function() {
             if (!currentItineraryData) return;
             const text = `Check out my trip to ${currentItineraryData.title}! Planned with TravelHub.`;
@@ -329,6 +375,9 @@
             if (currentItineraryData.days) {
                 currentItineraryData.days.forEach(day => {
                     text += `Day ${day.day}: ${day.theme}, in ${day.city}. `;
+                    if (day.foodSuggestion) { // Add food suggestion
+                        text += `Food suggestion: ${day.foodSuggestion}. `;
+                    }
                     if (day.activities) {
                         day.activities.forEach(activity => {
                             text += `${activity.name}. ${activity.details}. `;
@@ -345,26 +394,21 @@
             window.speechSynthesis.speak(utter);
         }
 
-        // *** FAVORITE FIX (Added populateHistoryDropdown call) ***
         window.toggleFavorite = async function() {
             if (!currentItineraryId || !supabaseClient) return;
             const btn = document.getElementById('fav-btn');
             const isFav = btn.classList.contains('text-yellow-400');
             
-            // Toggle UI immediately
             if (isFav) { btn.classList.remove('text-yellow-400'); btn.classList.add('text-gray-400'); } 
             else { btn.classList.add('text-yellow-400'); btn.classList.remove('text-gray-400'); }
 
             const { error } = await supabaseClient.from('itineraries').update({ is_favorite: !isFav }).eq('id', currentItineraryId);
             if (error) { 
                 displayMessage('Failed to update favorite.', 'error');
-                // Revert UI
                 if (isFav) { btn.classList.add('text-yellow-400'); } else { btn.classList.remove('text-yellow-400'); }
             } else {
-                // Update local data
                 const item = recentItineraries.find(i => i.id === currentItineraryId);
                 if (item) item.is_favorite = !isFav;
-                // *** FIX: Refresh the history dropdown to show the star ***
                 populateHistoryDropdown();
             }
         }
@@ -416,6 +460,7 @@
                         .high { background-color: #fee2e2; color: #b91c1c; }
                         .moderate { background-color: #fef3c7; color: #b45309; }
                         .low { background-color: #dcfce7; color: #166534; }
+                        .food-suggestion { background-color: #f3e8ff; color: #581c87; border: 1px solid #e9d5ff; padding: 0.75rem; border-radius: 0.5rem; margin: 1.5rem 0; }
                         .footer { text-align: center; font-size: 0.8rem; color: #a1a1aa; border-top: 1px solid #eee; padding-top: 1rem; margin-top: 2rem; }
                         /* Remove elements that shouldn't be in the download */
                         button, svg { display: none !important; } 
@@ -443,6 +488,7 @@
                             .replace(/class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700"/g, 'class="badge high"')
                             .replace(/class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700"/g, 'class="badge moderate"')
                             .replace(/class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700"/g, 'class="badge low"')
+                            .replace(/class="mt-4 p-3 bg-purple-50 dark:bg-purple-900\/30 border border-purple-200 dark:border-purple-800 rounded-lg text-sm text-purple-800 dark:text-purple-300"/g, 'class="food-suggestion"')
                         }
                     </div>
                     <div class="footer">
@@ -464,16 +510,40 @@
         }
 
         // --- API & Data ---
-        async function callApiProxy(payload) { const res = await fetch('/api/proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!res.ok) throw new Error((await res.json()).error || 'API Error'); return res.json(); }
+        async function callApiProxy(payload) { 
+            // Add a small, random delay to try and prevent API rate limiting
+            await new Promise(resolve => setTimeout(resolve, Math.random() * 500));
+            
+            const res = await fetch('/api/proxy', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(payload) 
+            }); 
+            
+            if (!res.ok) {
+                const errorBody = await res.json();
+                console.error("API Error Response:", errorBody);
+                throw new Error(errorBody.error || 'API Error'); 
+            }
+            
+            // For generateImage, the proxy already formats it, so we just return res.json()
+            return res.json();
+        }
         
         async function generateItinerary(e) { e.preventDefault(); toggleLoading('planner-form', true, 'Generating...'); 
             try { 
                 const data = Object.fromEntries(new FormData(e.target).entries());
                 const res = await callApiProxy({ type: 'itinerary', data: data });
+                // The proxy now sends parsed JSON directly for itinerary
                 currentItineraryData = res; 
                 await saveCurrentItinerary(); 
                 await loadItineraries(); 
-            } catch (err) { displayMessage(err.message, 'error'); } finally { toggleLoading('planner-form', false); } 
+            } catch (err) { 
+                console.error("generateItinerary Error:", err);
+                displayMessage(err.message, 'error'); 
+            } finally { 
+                toggleLoading('planner-form', false); 
+            } 
         }
 
         async function saveCurrentItinerary() { if (!isUserLoggedIn || !currentItineraryData) return;
@@ -482,7 +552,6 @@
         }
 
         async function loadItineraries() { if (!isUserLoggedIn) return;
-            // Fetch is_favorite column too
             const { data, error } = await supabaseClient.from('itineraries').select('id, created_at, data, is_favorite').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(5);
             if (!error && data?.length) { 
                 recentItineraries = data.map(i => ({...i, data: deepSanitize(i.data)})); 
@@ -493,20 +562,13 @@
             }
         }
 
-        // *** FAVORITE FIX (Reselects current item after dropdown rebuild) ***
         function populateHistoryDropdown() { 
             const sel = document.getElementById('itinerary-history');
             if (recentItineraries.length > 1) { 
                 document.getElementById('history-container').classList.remove('hidden'); 
-                
-                // Find the index of the currently selected itinerary
                 const currentIndex = recentItineraries.findIndex(i => i.id === currentItineraryId);
-
                 sel.innerHTML = recentItineraries.map((i, idx) => `<option value="${idx}">${i.data.title} ${i.is_favorite ? '★' : ''}</option>`).join(''); 
-                
-                // *** FAVORITE FIX: Reselect the current item after rebuilding dropdown ***
                 sel.value = currentIndex >= 0 ? currentIndex : 0;
-
                 sel.onchange = (e) => { 
                     const i = recentItineraries[e.target.value]; 
                     currentItineraryData = i.data; 
@@ -520,10 +582,15 @@
 
         function renderItinerary(data, isFav = false) {
             const div = document.getElementById('planner-content'), hdr = document.getElementById('itinerary-header');
-            if(!data) { div.innerHTML = '<p class="text-gray-500 italic">Welcome! Plan a trip above.</p>'; hdr.classList.add('hidden'); hdr.innerHTML=''; document.getElementById('download-html-btn').classList.add('hidden'); return; }
+            if(!data) { 
+                div.innerHTML = '<p class="text-gray-500 italic">Welcome! Plan a trip above.</p>'; 
+                hdr.classList.add('hidden'); 
+                hdr.innerHTML=''; 
+                document.getElementById('download-html-btn').classList.add('hidden'); 
+                return; 
+            }
             const { title, summary, budgetTier, bestSeasonToVisit, numberOfPeople, costPerHeadUSD, days } = deepSanitize(data);
             
-            // Render Header with NEW ICONS
             hdr.innerHTML = `
                 <div class="flex justify-between items-start">
                     <h3 class="text-3xl font-extrabold text-gray-900 dark:text-gray-100">${title}</h3>
@@ -543,23 +610,50 @@
             `;
 
             let html = '';
-            // Transportation Banner (Top)
             if (days?.[0]?.transportation_tip) {
                 html += `<div class="mt-8 mb-2 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl shadow-sm flex items-start"><div class="flex-shrink-0"><svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div class="ml-3"><h4 class="text-sm font-bold text-blue-800 dark:text-blue-300">Transportation Tip</h4><p class="mt-1 text-sm text-blue-700 dark:text-blue-200">${days[0].transportation_tip}</p></div></div>`;
             }
 
             if (days) days.forEach(d => {
-                html += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${d.day}: ${d.theme} (${d.city})</h4><div class="mt-4 space-y-4">`;
+                html += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${d.day}: ${d.theme} (${d.city})</h4>`;
+                
+                // *** NEW: Add Food Suggestion ***
+                if (d.foodSuggestion) {
+                    html += `<div class="mt-4 p-3 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg text-sm text-purple-800 dark:text-purple-300">${d.foodSuggestion}</div>`;
+                }
+
+                html += `<div class="mt-4 space-y-4">`;
                 if(d.activities) d.activities.forEach(a => {
                     const st = (a.type?.toLowerCase().match(/hotel|accommodation/)) ? `<div class="mt-2 star-rating ${getStarClass(a.details)}"></div>` : '';
-                    html += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"><div class="flex justify-between items-start"><div class="flex items-center"><h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${a.name}</h5><button onclick="openQaModal('${sanitizeHTML(a.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button></div><div class="text-right"><p class="font-semibold text-gray-800 dark:text-gray-100">$${a.approxCostUSD}</p>${getCrowdBadge(a.crowdLevel)}</div></div><p class="text-sm text-gray-500 dark:text-gray-500">${a.type}</p><p class="mt-2 text-gray-700 dark:text-gray-300">${a.details}</p><p class="mt-2 text-xs text-gray-500 dark:text-gray-500">${a.address}</p>${st}</div>`;
+                    // *** NEW: Added camera icon button ***
+                    html += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex items-center">
+                                        <h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${a.name}</h5>
+                                        <button onclick="openQaModal('${sanitizeHTML(a.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800" title="Ask a question about this">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        </button>
+                                        <button onclick="openImageModal('${sanitizeHTML(a.name + ', ' + d.city)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 ml-1" title="See an image of this">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        </button>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-semibold text-gray-800 dark:text-gray-100">$${a.approxCostUSD}</p>
+                                        ${getCrowdBadge(a.crowdLevel)}
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-500">${a.type}</p>
+                                <p class="mt-2 text-gray-700 dark:text-gray-300">${a.details}</p>
+                                <p class="mt-2 text-xs text-gray-500 dark:text-gray-500">${a.address}</p>
+                                ${st}
+                             </div>`;
                 });
                 html += '</div></div>';
             });
             div.innerHTML = html;
             hdr.classList.remove('hidden'); 
             document.getElementById('packing-integration-section').classList.remove('hidden'); 
-            document.getElementById('download-html-btn').classList.remove('hidden'); // Show HTML button
+            document.getElementById('download-html-btn').classList.remove('hidden');
             document.getElementById('pack-destination').value = title; 
             document.getElementById('pack-duration').value = days?.length||3; 
             document.getElementById('pack-season').value = bestSeasonToVisit;
