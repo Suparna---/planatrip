@@ -369,7 +369,11 @@
                         // We must sanitize recursively *first*
                         const sanitizedValue = deepSanitize(data[key]);
                         // Then apply decode *after* sanitizing
-                        sanitizedObject[key] = decodeHTMLEntities(sanitizedValue);
+                        if (typeof sanitizedValue === 'string') {
+                            sanitizedObject[key] = decodeHTMLEntities(sanitizedValue);
+                        } else {
+                            sanitizedObject[key] = sanitizedValue;
+                        }
                     } 
                 } 
                 return sanitizedObject; 
@@ -743,10 +747,13 @@
             if (days) days.forEach(d => {
                 html += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${d.day}: ${d.theme} (${d.city})</h4>`;
                 
-                // *** NEW: Styled Food Tip ***
+                // *** NEW: Styled Food Tip with new Icon ***
                 if (d.foodSuggestion) {
                     html += `<div class="tip-box tip-purple">
-                                <svg class="tip-box-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0c-.454-.303-.977-.454-1.5-.454V5.454c0-.523.151-1.046.454-1.5a2.704 2.704 0 013 0 2.704 2.704 0 003 0 2.704 2.704 0 013 0 2.704 2.704 0 003 0c.303.454.454.977.454 1.5v10.092zM12 12C10.895 12 10 11.105 10 10s.895-2 2-2 2 .895 2 2-.895 2-2 2z"></path></svg>
+                                <!-- *** NEW FORK/KNIFE ICON *** -->
+                                <svg class="tip-box-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M18.5 2C17.6716 2 17 2.67157 17 3.5V11C17 12.1046 16.1046 13 15 13H14V22H12V13H11V22H9V13H8C6.89543 13 6 12.1046 6 11V3.5C6 2.67157 5.32843 2 4.5 2H4V0H20V2H18.5Z" />
+                                </svg>
                                 <div class="tip-box-content">
                                     <h5>Food Suggestion</h5>
                                     <p>${d.foodSuggestion}</p>
@@ -803,30 +810,47 @@
                 console.log("Auth Event:", event); // For debugging
                 
                 const user = session?.user;
-                isUserLoggedIn = !!user;
+                isUserLoggedIn = !!user; // Update global state
 
                 if (user) {
+                    // User is signed in or session is restored
                     currentUserId = user.id;
                     currentUserName = user.user_metadata?.full_name || 'Friend';
                     
                     if (event === 'SIGNED_IN') {
-                        // This happens on magic link click
+                        // This happens *after* magic link click
                         setUIState(true);
                         displayMessage(`Welcome ${currentUserName}!`); 
                         loadItineraries();
                         switchTab('planner-panel'); // Show planner
                     } else if (event === 'INITIAL_SESSION') {
-                        // This happens on page refresh when already logged in
+                        // This happens on page refresh when *already* logged in
                         setUIState(true);
                         loadItineraries();
                         switchTab('planner-panel'); // Show planner
                     }
                 } else {
-                    // This happens on SIGNED_OUT or if INITIAL_SESSION is empty
+                    // User is not logged in
                     isUserLoggedIn = false;
                     currentUserId = 'anonymous_user';
                     currentUserName = 'Anonymous';
-                    setUIState(false); // This will show the login modal
+
+                    // *** THIS IS THE FIX ***
+                    // Only show the login modal if this is the *first* auth event
+                    // AND it's an empty session (i.e., not a magic link redirect).
+                    // If the user is clicking a magic link, the URL will have a hash.
+                    if (event === 'INITIAL_SESSION' && !session && !window.location.hash.includes('access_token')) {
+                         // This is the first load, user is not logged in, and NOT a magic link.
+                         // It is safe to show the login modal.
+                         setUIState(false); 
+                         switchTab('planner-panel'); // Default to planner tab, but modal will be on top
+                    } else if (event === 'SIGNED_OUT') {
+                         // If user *explicitly* logs out, show modal immediately.
+                         setUIState(false); 
+                         switchTab('planner-panel');
+                    }
+                    // If it's INITIAL_SESSION and *there is* a hash, we do *nothing*.
+                    // We wait for the 'SIGNED_IN' event to fire.
                 }
             });
             // *** END OF NEW AUTH LOGIC ***
