@@ -649,19 +649,22 @@
             e.preventDefault();
             if (!currentItineraryData) return;
 
-            toggleLoading('activity-form', true, 'Saving...');
+            toggleLoading('activity-form', true, 'Saving...'); // Spinner starts
 
-            const dayIndex = parseInt(document.getElementById('activity-day-index').value);
-            const cardIndex = parseInt(document.getElementById('activity-card-index').value);
+            try { // <-- TRY block is now at the top
+                // Get indexes
+                const dayIndex = parseInt(document.getElementById('activity-day-index').value);
+                const cardIndex = parseInt(document.getElementById('activity-card-index').value);
 
-            const newActivityData = {
-                name: document.getElementById('activity-name').value,
-                type: document.getElementById('activity-type').value,
-                details: document.getElementById('activity-details').value,
-                approxCostUSD: parseInt(document.getElementById('activity-cost').value) || 0,
-                address: document.getElementById('activity-address').value,
-                crowdLevel: 'N/A' // Set a default
-            };
+                // Create new data object
+                const newActivityData = {
+                    name: document.getElementById('activity-name').value,
+                    type: document.getElementById('activity-type').value,
+                    details: document.getElementById('activity-details').value,
+                    approxCostUSD: parseInt(document.getElementById('activity-cost').value) || 0,
+                    address: document.getElementById('activity-address').value,
+                    crowdLevel: 'N/A' // Set a default
+                };
 
             if (cardIndex > -1) {
                 // --- UPDATE EXISTING ---
@@ -675,29 +678,31 @@
                 }
                 currentItineraryData.days[dayIndex].activities.push(newActivityData);
             }
-
+        
             try {
                 // --- SAVE THE ENTIRE ITINERARY BLOB ---
                 await saveCurrentItinerary();
                 
                 // --- RE-RENDER THE ITINERARY (This is the magic!) ---
-                // We find out if the 'is_favorite' was true before re-rendering
                 const isFav = recentItineraries.find(i => i.id === currentItineraryId)?.is_favorite || false;
                 renderItinerary(currentItineraryData, isFav);
                 
                 displayMessage('Itinerary updated!');
                 closeActivityModal();
-            } catch (err) {
+
+            } catch (err) { // <-- This catch block will handle any error
+                console.error('Error in handleActivitySave:', err); // For debugging
                 displayMessage('Error saving changes: ' + err.message, 'error');
             } finally {
+                // --- This 'finally' block will ALWAYS run ---
                 toggleLoading('activity-form', false, 'Save Activity');
             }
-        }
+
         // --- *** END NEW ACTIVITY MODAL FUNCTIONS *** ---
 
 
         // --- Itinerary Features: Share, Speak, Download, Star ---
-        window.shareItinerary = async function() {
+          window.shareItinerary = async function() {
             if (!currentItineraryData) return;
             const text = `Check out my trip to ${currentItineraryData.title}! Planned with TravelHub.`;
             if (navigator.share) {
