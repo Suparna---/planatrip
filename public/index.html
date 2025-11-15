@@ -46,7 +46,7 @@
         .stars-5::before { content: '★★★★★'; } .stars-4::before { content: '★★★★☆'; } .stars-3::before { content: '★★★☆☆'; } .stars-2::before { content: '★★☆☆☆'; } .stars-1::before { content: '★☆☆☆☆'; } .stars-0::before { content: '☆☆☆☆☆'; }
         .mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; }
         .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background-color: white; padding: 2rem; border-radius: 0.75rem; max-width: 90%; width: 500px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); animation: fadeIn 0.3s ease-out; position: relative; /* Changed for X button */ }
+        .modal-content { background-color: white; padding: 2rem; border-radius: 0.75rem; max-width: 90%; width: 500px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); animation: fadeIn 0.3s ease-out; position: relative; }
         .dark .modal-content { background-color: #1f2937; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .prose h1, .prose h2, .prose h3 { font-weight: 700; color: #374151; } .prose ul { list-style-type: disc; padding-left: 1.5rem; } .prose li { margin-bottom: 0.5rem; }
@@ -54,7 +54,6 @@
         #qa-answer-container, #feedback-comments, #profile-modal .modal-content { max-height: 80vh; overflow-y: auto; }
         .rating-stars { display: inline-flex; flex-direction: row-reverse; } .rating-stars input { display: none; } .rating-stars label { color: #d1d5db; font-size: 2.5rem; cursor: pointer; transition: color 0.2s; } .dark .rating-stars label { color: #4b5563; } .rating-stars input:checked ~ label, .rating-stars label:hover, .rating-stars label:hover ~ label { color: #facc15; } .dark .rating-stars input:checked ~ label, .dark .rating-stars label:hover, .dark .rating-stars label:hover ~ label { color: #facc15; }
     
-        /* *** IMAGE MODAL STYLES *** */
         #image-modal-close-btn {
             position: absolute; top: -10px; right: -10px;
             background-color: #1f2937; color: white;
@@ -72,7 +71,7 @@
             color: #111827;
             padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; 
             margin-bottom: 1rem;
-            min-height: 1.5rem; /* Prevents layout shift */
+            min-height: 1.5rem;
         }
         .dark #image-modal-title {
             color: #f3f4f6;
@@ -382,7 +381,6 @@
             <form id="activity-form" class="space-y-4">
                 <input type="hidden" id="activity-day-index" value="">
                 <input type="hidden" id="activity-card-index" value="">
-
                 <div>
                     <label for="activity-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Activity Name</label>
                     <div class="clear-btn-wrapper mt-1">
@@ -450,16 +448,12 @@
         // --- UI Logic ---
         
         window.switchTab = function(targetId) {
-            // Hide all panels
             document.getElementById('search-panel').classList.add('hidden');
             document.getElementById('planner-panel').classList.add('hidden');
             document.getElementById('flights-panel').classList.add('hidden');
             document.getElementById('converter-panel').classList.add('hidden');
-
-            // Show target panel
             document.getElementById(targetId).classList.remove('hidden');
 
-            // --- Update Desktop Nav Tab styles ---
             const desktopTabs = ['tab-search', 'tab-planner', 'tab-flights', 'tab-converter'];
             const targetDesktopTab = 'tab-' + targetId.split('-')[0];
             desktopTabs.forEach(id => {
@@ -476,7 +470,6 @@
                 }
             });
 
-            // --- Update Mobile Nav Tab styles ---
             const mobileTabs = ['nav-search', 'nav-planner', 'nav-flights', 'nav-converter'];
             const targetMobileTab = 'nav-' + targetId.split('-')[0];
             mobileTabs.forEach(id => {
@@ -557,7 +550,7 @@
                 renderItinerary(null); 
             }
         }
-
+        
         // --- *** FIXED LOGIN/LOGOUT BUTTON *** ---
         window.handleLoginClick = async function() {
             if (!supabaseClient) return;
@@ -570,7 +563,7 @@
                 document.getElementById('login-modal').style.display = 'flex';
             }
         }
-
+        
         window.initiateMagicLink = async function(e) { e.preventDefault(); const email = document.getElementById('auth-email').value, name = document.getElementById('auth-name').value; if (!email || !name) { displayMessage('Please enter name and email.', 'error'); return; } toggleLoading('magic-link-form', true, 'Sending...'); const { error } = await supabaseClient.auth.signInWithOtp({ email: email, options: { data: { full_name: name } } }); toggleLoading('magic-link-form', false); if (error) displayMessage(`Auth Error: ${error.message}`, 'error'); else { document.getElementById('login-modal').style.display = 'none'; displayMessage(`Magic link sent to ${email}.`, 'info'); } }
         
         function displayMessage(msg, type = 'info') { const ex = document.getElementById('status-message'); if (ex) ex.remove(); const el = document.createElement('div'); el.id = 'status-message'; el.className = `p-3 fixed top-4 left-1/2 transform -translate-x-1/2 z-[1001] text-sm rounded-lg shadow-xl ${type === 'error' ? 'bg-red-600' : 'bg-blue-600'} text-white transition-all`; el.textContent = msg; document.body.appendChild(el); setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 5000); }
@@ -778,13 +771,9 @@
             }
 
             try {
-                // Remove the activity from the local data
                 currentItineraryData.days[dayIndex].activities.splice(cardIndex, 1);
-                
-                // Save the modified itinerary to Supabase
                 await saveCurrentItinerary();
                 
-                // Re-render the UI
                 const isFav = recentItineraries.find(i => i.id === currentItineraryId)?.is_favorite || false;
                 renderItinerary(currentItineraryData, isFav);
                 
@@ -807,7 +796,6 @@
             }
 
             try {
-                // 1. Delete from Supabase
                 const { error } = await supabaseClient
                     .from('itineraries')
                     .delete()
@@ -817,14 +805,11 @@
                     throw error;
                 }
 
-                // 2. Clear local data
                 displayMessage('Itinerary deleted.');
                 currentItineraryData = null;
                 currentItineraryId = null;
                 
-                // 3. Reload the itinerary list
-                // This will remove it from the dropdown and load the next one
-                await loadItineraries();
+                await loadItineraries(); 
 
             } catch (err) {
                 console.error('Error deleting itinerary:', err);
@@ -1106,6 +1091,7 @@
                 currentItineraryData = null;
                 currentItineraryId = null;
                 renderItinerary(null); // Clear the screen
+                populateHistoryDropdown(); // Clear the dropdown
                 return;
             }
             // *** END NEW ***
@@ -1127,9 +1113,9 @@
         function populateHistoryDropdown() { 
             const sel = document.getElementById('itinerary-history');
             
-            // *** NEW: Hide dropdown if 0 or 1 itineraries ***
             if (recentItineraries.length <= 1) { 
                 document.getElementById('history-container').classList.add('hidden'); 
+                sel.innerHTML = ''; // Clear it
                 return;
             }
             
@@ -1145,7 +1131,7 @@
             }; 
         }
 
-        // --- *** UPDATED RENDER FUNCTION *** ---
+        // --- *** UPDATED RENDER FUNCTION (WITH DELETE BUTTONS) *** ---
         function renderItinerary(data, isFav = false) {
             const div = document.getElementById('planner-content'), hdr = document.getElementById('itinerary-header');
             if(!data) { 
@@ -1166,7 +1152,7 @@
                          <button id="fav-btn" onclick="toggleFavorite()" title="Save to Favorites" class="${isFav ? 'text-yellow-400' : 'text-gray-400'} hover:text-yellow-500 transition"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg></button>
                          <button onclick="shareItinerary()" title="Share Itinerary" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg></button>
                          <button onclick="readItinerary()" title="Read Itinerary Aloud" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
-                         <button onclick="deleteCurrentItinerary()" title="Delete This Itinerary" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-600 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                         <button onclick="deleteCurrentItinerary()" title="Delete This Itinerary" class="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                     </div>
                 </div>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">${summary}</p>
@@ -1219,7 +1205,7 @@
                                         <button onclick="openActivityModal(${dayIndex}, ${cardIndex})" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 ml-1" title="Edit this activity">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                         </button>
-                                        <button onclick="deleteActivity(${dayIndex}, ${cardIndex})" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-600 ml-1" title="Delete this activity">
+                                        <button onclick="deleteActivity(${dayIndex}, ${cardIndex})" class="text-gray-400 hover:text-red-600 dark:hover:text-red-500 ml-1" title="Delete this activity">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
                                     </div>
@@ -1322,6 +1308,7 @@
                 }
             });
 
+            // *** ALL EVENT LISTENERS ARE HERE ***
             document.getElementById('magic-link-form').addEventListener('submit', initiateMagicLink);
             document.getElementById('qa-form').addEventListener('submit', handleQaSubmit);
             document.getElementById('feedback-form').addEventListener('submit', handleFeedbackSubmit);
