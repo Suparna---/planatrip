@@ -103,6 +103,18 @@
         .dark .tip-purple { background-color: #2e1065; border-color: #4c1d95; color: #c4b5fd; }
         .dark .tip-purple h5 { color: #e9d5ff; }
 
+        /* *** NEW EDITABLE STYLE *** */
+        .is-editable {
+            outline: 2px dashed #4f46e5;
+            background-color: #f5f3ff;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+        }
+        .dark .is-editable {
+            background-color: #1e293b;
+            outline-color: #818cf8;
+        }
+
     </style>
 </head>
 <body class="p-4 md:p-8 dark:bg-gray-950">
@@ -307,7 +319,6 @@
     </div>
     
     <nav class="mobile-nav md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg"><div class="max-w-4xl mx-auto flex justify-around"><button id="nav-search" onclick="switchTab('search-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg><span class="text-xs font-medium">Research</span></button><button id="nav-planner" onclick="switchTab('planner-panel')" class="flex flex-col items-center justify-center p-3 text-indigo-600 dark:text-indigo-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="text-xs font-medium">Planner</span></button><button id="nav-flights" onclick="switchTab('flights-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg><span class="text-xs font-medium">Flights</span></button><button id="nav-converter" onclick="switchTab('converter-panel')" class="flex flex-col items-center justify-center p-3 text-gray-500 dark:text-gray-400 transition duration-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg><span class="text-xs font-medium">Currency</span></button></div></nav>
-
 <script>
         // --- Globals & Constants ---
         let currentItineraryData = null, recentItineraries = [];
@@ -595,6 +606,62 @@
             }
         }
 
+        // --- *** NEW EDIT/SAVE FUNCTION *** ---
+        window.toggleEditItinerary = async function(btn) {
+            const contentDiv = document.getElementById('planner-content');
+            const isEditing = contentDiv.isContentEditable;
+
+            if (isEditing) {
+                // --- SAVE MODE ---
+                contentDiv.contentEditable = "false";
+                contentDiv.classList.remove('is-editable');
+                
+                // Update button icon/title back to "Edit"
+                btn.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>';
+                btn.title = "Edit Itinerary";
+                
+                // Get the new HTML and update the local data
+                const newHtml = contentDiv.innerHTML;
+                if (currentItineraryData) {
+                    // Store the raw HTML. This will now override the structured 'days' data.
+                    currentItineraryData.custom_html = newHtml; 
+                    
+                    // --- Save to Supabase ---
+                    if (supabaseClient && currentItineraryId) {
+                        displayMessage('Saving...', 'info');
+                        
+                        // We update the 'data' blob with our modified currentItineraryData object
+                        const { error } = await supabaseClient
+                            .from('itineraries')
+                            .update({ 
+                                data: currentItineraryData // This saves the whole object, including the new 'custom_html' property
+                            })
+                            .eq('id', currentItineraryId);
+                            
+                        if (error) {
+                            displayMessage('Error saving changes.', 'error');
+                            console.error('Error updating itinerary:', error);
+                        } else {
+                            displayMessage('Changes saved!');
+                        }
+                    }
+                }
+                
+            } else {
+                // --- EDIT MODE ---
+                contentDiv.contentEditable = "true";
+                contentDiv.classList.add('is-editable');
+                
+                // Update button icon/title to "Save"
+                btn.innerHTML = '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>';
+                btn.title = "Save Changes";
+                
+                contentDiv.focus();
+                displayMessage('Edit mode enabled. Click the save icon when done.', 'info');
+            }
+        }
+        // --- *** END NEW FUNCTION *** ---
+
         window.downloadHTML = function() {
             if (!currentItineraryData) {
                 displayMessage('No itinerary to download.', 'error');
@@ -804,6 +871,7 @@
             } 
         }
 
+        // --- *** MODIFIED RENDER FUNCTION *** ---
         function renderItinerary(data, isFav = false) {
             const div = document.getElementById('planner-content'), hdr = document.getElementById('itinerary-header');
             if(!data) { 
@@ -814,7 +882,8 @@
                 return; 
             }
             // *** Apply &amp; fix to all data before rendering ***
-            const { title, summary, budgetTier, bestSeasonToVisit, numberOfPeople, costPerHeadUSD, days } = deepSanitize(data);
+            // *** NEW: Add 'custom_html' to destructuring ***
+            const { title, summary, budgetTier, bestSeasonToVisit, numberOfPeople, costPerHeadUSD, days, custom_html } = deepSanitize(data);
             
             hdr.innerHTML = `
                 <div class="flex justify-between items-start">
@@ -823,6 +892,7 @@
                          <button id="fav-btn" onclick="toggleFavorite()" title="Save to Favorites" class="${isFav ? 'text-yellow-400' : 'text-gray-400'} hover:text-yellow-500 transition"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg></button>
                          <button onclick="shareItinerary()" title="Share Itinerary" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg></button>
                          <button onclick="readItinerary()" title="Read Itinerary Aloud" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
+                         <button id="edit-btn" onclick="toggleEditItinerary(this)" title="Edit Itinerary" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
                     </div>
                 </div>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">${summary}</p>
@@ -835,63 +905,75 @@
             `;
 
             let html = '';
-            // *** NEW: Styled Transportation Tip ***
-            if (days?.[0]?.transportation_tip) {
-                html += `<div class="tip-box tip-blue">
-                            <svg class="tip-box-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <div class="tip-box-content">
-                                <h5>Transportation Tip</h5>
-                                <p>${days[0].transportation_tip}</p>
-                            </div>
-                         </div>`;
-            }
 
-            if (days) days.forEach(d => {
-                html += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${d.day}: ${d.theme} (${d.city})</h4>`;
-                
-                // *** NEW: Styled Food Tip with new Icon ***
-                if (d.foodSuggestion) {
-                    html += `<div class="tip-box tip-purple">
+            // --- *** NEW EDIT-MODE CHECK *** ---
+            if (custom_html) {
+                // If user has saved custom HTML, just render that.
+                div.innerHTML = custom_html;
+            } else {
+                // --- *** ORIGINAL RENDER LOGIC *** ---
+                // *** NEW: Styled Transportation Tip ***
+                if (days?.[0]?.transportation_tip) {
+                    html += `<div class="tip-box tip-blue">
                                 <svg class="tip-box-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 <div class="tip-box-content">
-                                    <h5>Food Suggestion</h5>
-                                    <p>${d.foodSuggestion}</p>
+                                    <h5>Transportation Tip</h5>
+                                    <p>${days[0].transportation_tip}</p>
                                 </div>
-                             </div>`;
+                            </div>`;
                 }
 
-                html += `<div class="mt-4 space-y-4">`;
-                if(d.activities) d.activities.forEach(a => {
-                    const st = (a.type?.toLowerCase().match(/hotel|accommodation/)) ? `<div class="mt-2 star-rating ${getStarClass(a.details)}"></div>` : '';
-                    // *** NEW: Added camera icon button ***
-                    html += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex items-center flex-wrap">
-                                        <h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${a.name}</h5>
-                                        <button onclick="openQaModal('${sanitizeHTML(a.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800" title="Ask a question about this">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        </button>
-                                        <button onclick="openImageModal('${sanitizeHTML(a.name + ', ' + d.city)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 ml-1" title="See an image of this">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                        </button>
+                if (days) days.forEach(d => {
+                    html += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${d.day}: ${d.theme} (${d.city})</h4>`;
+                    
+                    // *** NEW: Styled Food Tip with new Icon ***
+                    if (d.foodSuggestion) {
+                        html += `<div class="tip-box tip-purple">
+                                    <svg class="tip-box-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <div class="tip-box-content">
+                                        <h5>Food Suggestion</h5>
+                                        <p>${d.foodSuggestion}</p>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="font-semibold text-gray-800 dark:text-gray-100">$${a.approxCostUSD}</p>
-                                        ${getCrowdBadge(a.crowdLevel)}
+                                </div>`;
+                    }
+
+                    html += `<div class="mt-4 space-y-4">`;
+                    if(d.activities) d.activities.forEach(a => {
+                        const st = (a.type?.toLowerCase().match(/hotel|accommodation/)) ? `<div class="mt-2 star-rating ${getStarClass(a.details)}"></div>` : '';
+                        // *** NEW: Added camera icon button ***
+                        html += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex items-center flex-wrap">
+                                            <h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${a.name}</h5>
+                                            <button onclick="openQaModal('${sanitizeHTML(a.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800" title="Ask a question about this">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            </button>
+                                            <button onclick="openImageModal('${sanitizeHTML(a.name + ', ' + d.city)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 ml-1" title="See an image of this">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                            </button>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-semibold text-gray-800 dark:text-gray-100">$${a.approxCostUSD}</p>
+                                            ${getCrowdBadge(a.crowdLevel)}
+                                        </div>
                                     </div>
-                                </div>
-                                <p class="text-sm text-gray-500 dark:text-gray-500">${a.type}</p>
-                                <p class="mt-2 text-gray-700 dark:text-gray-300">${a.details}</p>
-                                <p class="mt-2 text-xs text-gray-500 dark:text-gray-500">${a.address}</p>
-                                ${st}
-                             </div>`;
+                                    <p class="text-sm text-gray-500 dark:text-gray-500">${a.type}</p>
+                                    <p class="mt-2 text-gray-700 dark:text-gray-300">${a.details}</p>
+                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-500">${a.address}</p>
+                                    ${st}
+                                </div>`;
+                    });
+                    html += '</div></div>';
                 });
-                html += '</div></div>';
-            });
-            div.innerHTML = html;
+                div.innerHTML = html;
+            }
+            // --- *** END OF NEW/ORIGINAL LOGIC WRAPPER *** ---
+            
             hdr.classList.remove('hidden'); 
             document.getElementById('packing-integration-section').classList.remove('hidden'); 
             document.getElementById('download-html-btn').classList.remove('hidden');
+            
+            // --- *** This pre-fill logic now runs for both custom and generated HTML *** ---
             document.getElementById('pack-destination').value = title; 
             document.getElementById('pack-duration').value = days?.length||3; 
             document.getElementById('pack-season').value = bestSeasonToVisit;
