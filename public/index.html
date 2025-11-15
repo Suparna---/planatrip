@@ -103,7 +103,6 @@
         .dark .tip-purple { background-color: #2e1065; border-color: #4c1d95; color: #c4b5fd; }
         .dark .tip-purple h5 { color: #e9d5ff; }
 
-        /* *** NEW EDITABLE STYLE *** */
         .is-editable {
             outline: 2px dashed #4f46e5;
             background-color: #f5f3ff;
@@ -114,12 +113,7 @@
             background-color: #1e293b;
             outline-color: #818cf8;
         }
-        .dark .is-editable {
-            background-color: #1e293b;
-            outline-color: #818cf8;
-        }
-
-        /* *** NEW STYLE FOR ADD BUTTON *** */
+        
         .add-activity-btn {
             display: flex;
             align-items: center;
@@ -150,6 +144,32 @@
             height: 1.25rem;
             margin-right: 0.5rem;
         }
+
+        /* *** NEW STYLES FOR "X" CLEAR BUTTONS *** */
+        .clear-btn-wrapper {
+            position: relative;
+            display: block;
+        }
+        .clear-btn {
+            position: absolute;
+            right: 0.75rem; /* 12px */
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 0.25rem; /* 4px */
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .dark .clear-btn { background-color: #4b5563; color: #d1d5db; }
+        .clear-btn svg { width: 1rem; height: 1rem; }
+        /* Special class for textareas, as "top: 50%" won't work */
+        .clear-btn-textarea {
+            top: 0.75rem; /* 12px */
+            transform: translateY(0);
+        }
+
     </style>
 </head>
 <body class="p-4 md:p-8 dark:bg-gray-950">
@@ -366,24 +386,49 @@
 
                 <div>
                     <label for="activity-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Activity Name</label>
-                    <input type="text" id="activity-name" name="activity-name" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Eiffel Tower">
+                    <div class="clear-btn-wrapper mt-1">
+                        <input type="text" id="activity-name" name="activity-name" required class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Eiffel Tower">
+                        <span class="clear-btn" onclick="clearField('activity-name')">
+                            <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        </span>
+                    </div>
                 </div>
                 <div>
                     <label for="activity-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
-                    <input type="text" id="activity-type" name="activity-type" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Landmark, Restaurant">
+                    <div class="clear-btn-wrapper mt-1">
+                        <input type="text" id="activity-type" name="activity-type" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Landmark, Restaurant">
+                        <span class="clear-btn" onclick="clearField('activity-type')">
+                            <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        </span>
+                    </div>
                 </div>
                 <div>
                     <label for="activity-details" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Details</label>
-                    <textarea id="activity-details" name="activity-details" rows="3" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="A brief description of the activity."></textarea>
+                    <div class="clear-btn-wrapper mt-1">
+                        <textarea id="activity-details" name="activity-details" rows="3" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="A brief description of the activity."></textarea>
+                        <span class="clear-btn clear-btn-textarea" onclick="clearField('activity-details')">
+                            <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        </span>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label for="activity-cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cost (USD)</label>
-                        <input type="number" id="activity-cost" name="activity-cost" min="0" value="0" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border">
+                        <div class="clear-btn-wrapper mt-1">
+                            <input type="number" id="activity-cost" name="activity-cost" min="0" value="0" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border">
+                            <span class="clear-btn" onclick="clearField('activity-cost')">
+                                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                            </span>
+                        </div>
                     </div>
                     <div>
                         <label for="activity-address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
-                        <input type="text" id="activity-address" name="activity-address" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., 123 Main St">
+                        <div class="clear-btn-wrapper mt-1">
+                            <input type="text" id="activity-address" name="activity-address" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., 123 Main St">
+                            <span class="clear-btn" onclick="clearField('activity-address')">
+                                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <button type="submit" id="activity-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Save Activity</button>
@@ -513,7 +558,20 @@
                 renderItinerary(null); 
             }
         }
-        window.handleLoginClick = async function() { if (!supabaseClient) return; if (isUserLoggedIn) { await supabaseClient.auth.signOut(); } }
+        
+        // --- *** FIXED LOGIN/LOGOUT BUTTON *** ---
+        window.handleLoginClick = async function() {
+            if (!supabaseClient) return;
+            
+            if (isUserLoggedIn) {
+                // User is LOGGED IN, so log them out.
+                await supabaseClient.auth.signOut();
+            } else {
+                // User is LOGGED OUT, so show the login modal.
+                document.getElementById('login-modal').style.display = 'flex';
+            }
+        }
+        
         window.initiateMagicLink = async function(e) { e.preventDefault(); const email = document.getElementById('auth-email').value, name = document.getElementById('auth-name').value; if (!email || !name) { displayMessage('Please enter name and email.', 'error'); return; } toggleLoading('magic-link-form', true, 'Sending...'); const { error } = await supabaseClient.auth.signInWithOtp({ email: email, options: { data: { full_name: name } } }); toggleLoading('magic-link-form', false); if (error) displayMessage(`Auth Error: ${error.message}`, 'error'); else { document.getElementById('login-modal').style.display = 'none'; displayMessage(`Magic link sent to ${email}.`, 'info'); } }
         
         function displayMessage(msg, type = 'info') { const ex = document.getElementById('status-message'); if (ex) ex.remove(); const el = document.createElement('div'); el.id = 'status-message'; el.className = `p-3 fixed top-4 left-1/2 transform -translate-x-1/2 z-[1001] text-sm rounded-lg shadow-xl ${type === 'error' ? 'bg-red-600' : 'bg-blue-600'} text-white transition-all`; el.textContent = msg; document.body.appendChild(el); setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 5000); }
@@ -528,6 +586,11 @@
         window.closeQaModal = function() { document.getElementById('qa-modal').classList.add('hidden'); }
         window.openFeedbackModal = function() { if (!isUserLoggedIn) return displayMessage('Login to verify.', 'error'); document.getElementById('feedback-modal').classList.remove('hidden'); }
         window.closeFeedbackModal = function() { document.getElementById('feedback-modal').classList.add('hidden'); }
+
+        // --- *** NEW HELPER FOR "X" BUTTONS *** ---
+        window.clearField = function(fieldId) {
+            document.getElementById(fieldId).value = '';
+        }
 
         // *** PROFILE MODAL FUNCTIONS ***
         window.openProfileModal = function() {
@@ -645,19 +708,37 @@
             document.getElementById('activity-modal').classList.add('hidden');
         }
 
-        // --- *** THIS IS THE CORRECTED, BUG-FREE FUNCTION *** ---
+        // --- *** FIXED SAVE BUTTON FUNCTION *** ---
         async function handleActivitySave(e) {
             e.preventDefault();
             if (!currentItineraryData) return;
 
             toggleLoading('activity-form', true, 'Saving...'); // Spinner starts
 
-            try { // <-- TRY block starts at the top
-                // Get indexes
+            try {
                 const dayIndex = parseInt(document.getElementById('activity-day-index').value);
                 const cardIndex = parseInt(document.getElementById('activity-card-index').value);
 
-                // Create new data object
+                // --- FIX: Ensure the 'days' array and the specific 'day' object exist ---
+                if (!currentItineraryData.days) {
+                    currentItineraryData.days = [];
+                }
+                while (dayIndex >= currentItineraryData.days.length) {
+                    // If day doesn't exist (e.g., adding to Day 4 on a 3-day trip), create it
+                    currentItineraryData.days.push({
+                        day: currentItineraryData.days.length + 1,
+                        theme: 'User-Added Day',
+                        city: currentItineraryData.days[0]?.city || '', // Guess city
+                        activities: [],
+                        foodSuggestion: ''
+                    });
+                }
+                // Now we know currentItineraryData.days[dayIndex] is safe to access
+                if (!currentItineraryData.days[dayIndex].activities) {
+                    currentItineraryData.days[dayIndex].activities = [];
+                }
+                // --- END FIX ---
+
                 const newActivityData = {
                     name: document.getElementById('activity-name').value,
                     type: document.getElementById('activity-type').value,
@@ -666,12 +747,6 @@
                     address: document.getElementById('activity-address').value,
                     crowdLevel: 'N/A' // Set a default
                 };
-
-                // --- FIX: CHECK IF activities ARRAY EXISTS ---
-                if (!currentItineraryData.days[dayIndex].activities) {
-                    currentItineraryData.days[dayIndex].activities = [];
-                }
-                // --- END FIX ---
 
                 if (cardIndex > -1) {
                     // --- UPDATE EXISTING ---
@@ -682,21 +757,18 @@
                     currentItineraryData.days[dayIndex].activities.push(newActivityData);
                 }
 
-                // --- SAVE THE ENTIRE ITINERARY BLOB ---
                 await saveCurrentItinerary();
                 
-                // --- RE-RENDER THE ITINERARY ---
                 const isFav = recentItineraries.find(i => i.id === currentItineraryId)?.is_favorite || false;
                 renderItinerary(currentItineraryData, isFav);
                 
                 displayMessage('Itinerary updated!');
                 closeActivityModal();
 
-            } catch (err) { // <-- This catch block will handle any error
-                console.error('Error in handleActivitySave:', err); // For debugging
+            } catch (err) {
+                console.error('Error in handleActivitySave:', err);
                 displayMessage('Error saving changes: ' + err.message, 'error');
-            } finally { // <-- This finally block will ALWAYS run
-                // --- This stops the infinite spinner ---
+            } finally {
                 toggleLoading('activity-form', false, 'Save Activity');
             }
         }
@@ -910,12 +982,10 @@
                 
                 const res = await callApiProxy({ type: 'itinerary', data: data });
                 currentItineraryData = res; 
-                // *** NEW: Set a new property 'id' on the data itself ***
-                // This is a flag to 'saveCurrentItinerary' to let it know this is a NEW insert.
                 currentItineraryData.isNew = true; 
                 
                 await saveCurrentItinerary(); 
-                await loadItineraries(); // This will re-load and render
+                await loadItineraries(); 
                 planBtn.innerHTML = 'Itinerary Generated';
             } catch (err) { 
                 console.error("generateItinerary Error:", err);
@@ -929,31 +999,27 @@
         async function saveCurrentItinerary() {
             if (!isUserLoggedIn || !currentItineraryData) return;
 
-            // Check if this is a NEW itinerary or an UPDATE
             if (currentItineraryData.isNew) {
-                // --- This is a NEW itinerary, so we INSERT it ---
-                delete currentItineraryData.isNew; // Remove our temporary flag
+                delete currentItineraryData.isNew; 
                 
                 const { data, error } = await supabaseClient
                     .from('itineraries')
                     .insert([{ user_id: currentUserId, data: currentItineraryData }])
                     .select()
-                    .single(); // Get the new row back, including its ID
+                    .single(); 
 
                 if (error) {
                     console.error('Error inserting new itinerary:', error);
                     throw new Error('Could not save new itinerary.');
                 } else if (data) {
-                    currentItineraryId = data.id; // Get the new ID
-                    currentItineraryData.id = data.id; // Store the ID in our local data
+                    currentItineraryId = data.id; 
+                    currentItineraryData.id = data.id; 
                     
-                    // Find and update the item in recentItineraries
                     const newEntry = { id: data.id, created_at: data.created_at, data: currentItineraryData, is_favorite: false };
-                    recentItineraries.unshift(newEntry); // Add to start of list
+                    recentItineraries.unshift(newEntry); 
                 }
                 
             } else {
-                // --- This is an UPDATE to an existing itinerary ---
                 if (!currentItineraryId) {
                     console.error('Cannot update: currentItineraryId is not set.');
                     return;
@@ -961,7 +1027,7 @@
                 
                 const { error } = await supabaseClient
                     .from('itineraries')
-                    .update({ data: currentItineraryData }) // Just update the data blob
+                    .update({ data: currentItineraryData }) 
                     .eq('id', currentItineraryId);
                 
                 if (error) {
@@ -977,7 +1043,6 @@
             if (!error && data?.length) { 
                 recentItineraries = data.map(i => {
                     const saneData = deepSanitize(i.data);
-                    // *** NEW: Ensure the ID is part of the data object ***
                     saneData.id = i.id; 
                     return { ...i, data: saneData };
                 }); 
@@ -1007,7 +1072,6 @@
             } 
         }
 
-        // --- *** HEAVILY MODIFIED RENDER FUNCTION *** ---
         function renderItinerary(data, isFav = false) {
             const div = document.getElementById('planner-content'), hdr = document.getElementById('itinerary-header');
             if(!data) { 
@@ -1018,7 +1082,6 @@
                 return; 
             }
             
-            // We no longer check for custom_html. We always render from data.
             const { title, summary, budgetTier, bestSeasonToVisit, numberOfPeople, costPerHeadUSD, days } = deepSanitize(data);
             
             hdr.innerHTML = `
@@ -1034,7 +1097,7 @@
                 <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Budget</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${budgetTier}</dd></div>
                     <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Travelers</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${numberOfPeople}</dd></div>
-                    <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Cost/Head</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">$${costPerHeadUSD}</dd></div>
+                    <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Cost/Head</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-1D">$${costPerHeadUSD}</dd></div>
                     <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 rounded-lg"><dt class="text-sm font-medium text-indigo-700 dark:text-indigo-400">Season</dt><dd class="text-lg font-bold text-gray-900 dark:text-gray-100">${bestSeasonToVisit}</dd></div>
                 </div>
             `;
@@ -1050,7 +1113,7 @@
                          </div>`;
             }
 
-            if (days) days.forEach((d, dayIndex) => { // <-- Added dayIndex
+            if (days) days.forEach((d, dayIndex) => { 
                 html += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${d.day}: ${d.theme} (${d.city})</h4>`;
                 
                 if (d.foodSuggestion) {
@@ -1064,7 +1127,7 @@
                 }
 
                 html += `<div class="mt-4 space-y-4">`;
-                if(d.activities) d.activities.forEach((a, cardIndex) => { // <-- Added cardIndex
+                if(d.activities) d.activities.forEach((a, cardIndex) => { 
                     const st = (a.type?.toLowerCase().match(/hotel|accommodation/)) ? `<div class="mt-2 star-rating ${getStarClass(a.details)}"></div>` : '';
                     html += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
                                 <div class="flex justify-between items-start">
@@ -1095,7 +1158,6 @@
                 });
                 html += '</div>';
 
-                // --- *** NEW "+ ADD ACTIVITY" BUTTON FOR EACH DAY *** ---
                 html += `
                     <button class="add-activity-btn" onclick="openActivityModal(${dayIndex})">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -1187,7 +1249,6 @@
             document.getElementById('feedback-form').addEventListener('submit', handleFeedbackSubmit);
             document.getElementById('planner-form').addEventListener('submit', generateItinerary);
             document.getElementById('profile-form').addEventListener('submit', handleProfileSave);
-            // *** NEW EVENT LISTENER FOR THE NEW MODAL ***
             document.getElementById('activity-form').addEventListener('submit', handleActivitySave);
             
             document.getElementById('search-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('search-form', true, 'Searching...'); try { const res = await callApiProxy({ type: 'groundedSearch', query: document.getElementById('query').value }); document.getElementById('search-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('search-title').classList.remove('hidden'); } catch(e){displayMessage('Search failed','error')} finally { toggleLoading('search-form', false); } });
