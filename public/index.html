@@ -579,7 +579,7 @@
         window.openFeedbackModal = function() { if (!isUserLoggedIn) return displayMessage('Login to verify.', 'error'); document.getElementById('feedback-modal').classList.remove('hidden'); }
         window.closeFeedbackModal = function() { document.getElementById('feedback-modal').classList.add('hidden'); }
 
-        // --- *** NEW HELPER FOR "X" BUTTONS *** ---
+        // --- *** HELPER FOR "X" BUTTONS *** ---
         window.clearField = function(fieldId) {
             document.getElementById(fieldId).value = '';
         }
@@ -699,7 +699,7 @@
             document.getElementById('activity-modal').classList.add('hidden');
         }
 
-        // --- *** FIXED SAVE BUTTON FUNCTION *** ---
+        // --- *** FINAL FIXED SAVE BUTTON FUNCTION *** ---
         async function handleActivitySave(e) {
             e.preventDefault();
             if (!currentItineraryData) return;
@@ -710,21 +710,31 @@
                 const dayIndex = parseInt(document.getElementById('activity-day-index').value);
                 const cardIndex = parseInt(document.getElementById('activity-card-index').value);
 
+                // --- ROBUST FIX: Ensure the day and activities array exist ---
                 if (!currentItineraryData.days) {
                     currentItineraryData.days = [];
                 }
-                while (dayIndex >= currentItineraryData.days.length) {
-                    currentItineraryData.days.push({
-                        day: currentItineraryData.days.length + 1,
-                        theme: 'User-Added Day',
-                        city: currentItineraryData.days[0]?.city || '', 
-                        activities: [],
-                        foodSuggestion: ''
-                    });
+                
+                // Ensure all days up to this one exist (fix for sparse arrays or null entries)
+                for (let i = 0; i <= dayIndex; i++) {
+                    if (!currentItineraryData.days[i]) { 
+                        // If day is missing (null or undefined), create it
+                        currentItineraryData.days[i] = {
+                            day: i + 1,
+                            theme: 'User-Added Day',
+                            // Safely find the first available city to use as a default
+                            city: currentItineraryData.days.find(d => d && d.city)?.city || '', 
+                            activities: [],
+                            foodSuggestion: ''
+                        };
+                    }
                 }
+                
+                // Now we know days[dayIndex] exists, ensure its 'activities' array exists
                 if (!currentItineraryData.days[dayIndex].activities) {
                     currentItineraryData.days[dayIndex].activities = [];
                 }
+                // --- END ROBUST FIX ---
 
                 const newActivityData = {
                     name: document.getElementById('activity-name').value,
@@ -736,9 +746,11 @@
                 };
 
                 if (cardIndex > -1) {
+                    // --- UPDATE EXISTING ---
                     const oldActivity = currentItineraryData.days[dayIndex].activities[cardIndex];
                     currentItineraryData.days[dayIndex].activities[cardIndex] = { ...oldActivity, ...newActivityData };
                 } else {
+                    // --- ADD NEW ---
                     currentItineraryData.days[dayIndex].activities.push(newActivityData);
                 }
 
@@ -754,6 +766,7 @@
                 console.error('Error in handleActivitySave:', err);
                 displayMessage('Error saving changes: ' + err.message, 'error');
             } finally {
+                // This will NOW run every time, even if the 'try' block crashes
                 toggleLoading('activity-form', false, 'Save Activity');
             }
         }
@@ -1064,7 +1077,7 @@
             } else {
                 if (!currentItineraryId) {
                     console.error('Cannot update: currentItineraryId is not set.');
-                    return;
+                    throw new Error("No itinerary ID. Cannot save."); // <-- *** FIXED: THROW ERROR ***
                 }
                 
                 const { error } = await supabaseClient
@@ -1074,7 +1087,7 @@
                 
                 if (error) {
                     console.error('Error updating itinerary:', error);
-                    throw new Error('Could not update itinerary.');
+                    throw new Error('Could not update itinerary: ' + error.message); // <-- *** FIXED: THROW ERROR ***
                 }
             }
         }
@@ -1333,5 +1346,3 @@
         }
         document.addEventListener('DOMContentLoaded', main);
     </script>
-</body>
-</html>
