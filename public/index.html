@@ -153,44 +153,6 @@
     </style>
 </head>
 <body class="p-4 md:p-8 dark:bg-gray-950">
-
-    <div id="activity-modal" class="modal-backdrop hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-start mb-4">
-                <h3 id="activity-modal-title" class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Add Activity</h3>
-                <button onclick="closeActivityModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button>
-            </div>
-            
-            <form id="activity-form" class="space-y-4">
-                <input type="hidden" id="activity-day-index" value="">
-                <input type="hidden" id="activity-card-index" value="">
-
-                <div>
-                    <label for="activity-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Activity Name</label>
-                    <input type="text" id="activity-name" name="activity-name" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Eiffel Tower">
-                </div>
-                <div>
-                    <label for="activity-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
-                    <input type="text" id="activity-type" name="activity-type" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Landmark, Restaurant">
-                </div>
-                <div>
-                    <label for="activity-details" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Details</label>
-                    <textarea id="activity-details" name="activity-details" rows="3" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="A brief description of the activity."></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="activity-cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cost (USD)</label>
-                        <input type="number" id="activity-cost" name="activity-cost" min="0" value="0" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border">
-                    </div>
-                    <div>
-                        <label for="activity-address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
-                        <input type="text" id="activity-address" name="activity-address" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., 123 Main St">
-                    </div>
-                </div>
-                <button type="submit" id="activity-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Save Activity</button>
-            </form>
-        </div>
-    </div>
     
     <div id="app-container">
         <div class="max-w-4xl mx-auto pb-24">
@@ -387,6 +349,44 @@
                     <input type="text" id="profile-interests" name="profile-interests" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., History, Museums, Hiking">
                 </div>
                 <button type="submit" id="profile-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Save Preferences</button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="activity-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-start mb-4">
+                <h3 id="activity-modal-title" class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Add Activity</h3>
+                <button onclick="closeActivityModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button>
+            </div>
+            
+            <form id="activity-form" class="space-y-4">
+                <input type="hidden" id="activity-day-index" value="">
+                <input type="hidden" id="activity-card-index" value="">
+
+                <div>
+                    <label for="activity-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Activity Name</label>
+                    <input type="text" id="activity-name" name="activity-name" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Eiffel Tower">
+                </div>
+                <div>
+                    <label for="activity-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
+                    <input type="text" id="activity-type" name="activity-type" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Landmark, Restaurant">
+                </div>
+                <div>
+                    <label for="activity-details" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Details</label>
+                    <textarea id="activity-details" name="activity-details" rows="3" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="A brief description of the activity."></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="activity-cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cost (USD)</label>
+                        <input type="number" id="activity-cost" name="activity-cost" min="0" value="0" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border">
+                    </div>
+                    <div>
+                        <label for="activity-address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
+                        <input type="text" id="activity-address" name="activity-address" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., 123 Main St">
+                    </div>
+                </div>
+                <button type="submit" id="activity-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Save Activity</button>
             </form>
         </div>
     </div>
@@ -645,13 +645,14 @@
             document.getElementById('activity-modal').classList.add('hidden');
         }
 
+        // --- *** THIS IS THE CORRECTED, BUG-FREE FUNCTION *** ---
         async function handleActivitySave(e) {
             e.preventDefault();
             if (!currentItineraryData) return;
 
             toggleLoading('activity-form', true, 'Saving...'); // Spinner starts
 
-            try { // <-- TRY block is now at the top
+            try { // <-- TRY block starts at the top
                 // Get indexes
                 const dayIndex = parseInt(document.getElementById('activity-day-index').value);
                 const cardIndex = parseInt(document.getElementById('activity-card-index').value);
@@ -666,24 +667,25 @@
                     crowdLevel: 'N/A' // Set a default
                 };
 
-            if (cardIndex > -1) {
-                // --- UPDATE EXISTING ---
-                // Merge new data with old, in case some fields were missing (like crowdLevel)
-                const oldActivity = currentItineraryData.days[dayIndex].activities[cardIndex];
-                currentItineraryData.days[dayIndex].activities[cardIndex] = { ...oldActivity, ...newActivityData };
-            } else {
-                // --- ADD NEW ---
+                // --- FIX: CHECK IF activities ARRAY EXISTS ---
                 if (!currentItineraryData.days[dayIndex].activities) {
-                    currentItineraryData.days[dayIndex].activities = []; // Ensure array exists
+                    currentItineraryData.days[dayIndex].activities = [];
                 }
-                currentItineraryData.days[dayIndex].activities.push(newActivityData);
-            }
-        
-            try {
+                // --- END FIX ---
+
+                if (cardIndex > -1) {
+                    // --- UPDATE EXISTING ---
+                    const oldActivity = currentItineraryData.days[dayIndex].activities[cardIndex];
+                    currentItineraryData.days[dayIndex].activities[cardIndex] = { ...oldActivity, ...newActivityData };
+                } else {
+                    // --- ADD NEW ---
+                    currentItineraryData.days[dayIndex].activities.push(newActivityData);
+                }
+
                 // --- SAVE THE ENTIRE ITINERARY BLOB ---
                 await saveCurrentItinerary();
                 
-                // --- RE-RENDER THE ITINERARY (This is the magic!) ---
+                // --- RE-RENDER THE ITINERARY ---
                 const isFav = recentItineraries.find(i => i.id === currentItineraryId)?.is_favorite || false;
                 renderItinerary(currentItineraryData, isFav);
                 
@@ -693,16 +695,16 @@
             } catch (err) { // <-- This catch block will handle any error
                 console.error('Error in handleActivitySave:', err); // For debugging
                 displayMessage('Error saving changes: ' + err.message, 'error');
-            } finally {
-                // --- This 'finally' block will ALWAYS run ---
+            } finally { // <-- This finally block will ALWAYS run
+                // --- This stops the infinite spinner ---
                 toggleLoading('activity-form', false, 'Save Activity');
             }
-
+        }
         // --- *** END NEW ACTIVITY MODAL FUNCTIONS *** ---
 
 
         // --- Itinerary Features: Share, Speak, Download, Star ---
-          window.shareItinerary = async function() {
+        window.shareItinerary = async function() {
             if (!currentItineraryData) return;
             const text = `Check out my trip to ${currentItineraryData.title}! Planned with TravelHub.`;
             if (navigator.share) {
@@ -1211,4 +1213,3 @@
     </script>
 </body>
 </html>
-        
