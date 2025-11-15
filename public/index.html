@@ -114,10 +114,83 @@
             background-color: #1e293b;
             outline-color: #818cf8;
         }
+        .dark .is-editable {
+            background-color: #1e293b;
+            outline-color: #818cf8;
+        }
 
+        /* *** NEW STYLE FOR ADD BUTTON *** */
+        .add-activity-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border: 2px dashed #c7d2fe;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            color: #4f46e5;
+            transition: all 0.2s ease;
+        }
+        .add-activity-btn:hover {
+            background-color: #f5f3ff;
+            border-color: #4f46e5;
+        }
+        .dark .add-activity-btn {
+            border-color: #374151;
+            color: #818cf8;
+        }
+        .dark .add-activity-btn:hover {
+            background-color: #1e293b;
+            border-color: #818cf8;
+        }
+        .add-activity-btn svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.5rem;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8 dark:bg-gray-950">
+
+    <div id="activity-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-start mb-4">
+                <h3 id="activity-modal-title" class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Add Activity</h3>
+                <button onclick="closeActivityModal()" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 text-3xl leading-none">&times;</button>
+            </div>
+            
+            <form id="activity-form" class="space-y-4">
+                <input type="hidden" id="activity-day-index" value="">
+                <input type="hidden" id="activity-card-index" value="">
+
+                <div>
+                    <label for="activity-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Activity Name</label>
+                    <input type="text" id="activity-name" name="activity-name" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Eiffel Tower">
+                </div>
+                <div>
+                    <label for="activity-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
+                    <input type="text" id="activity-type" name="activity-type" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., Landmark, Restaurant">
+                </div>
+                <div>
+                    <label for="activity-details" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Details</label>
+                    <textarea id="activity-details" name="activity-details" rows="3" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="A brief description of the activity."></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="activity-cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cost (USD)</label>
+                        <input type="number" id="activity-cost" name="activity-cost" min="0" value="0" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border">
+                    </div>
+                    <div>
+                        <label for="activity-address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
+                        <input type="text" id="activity-address" name="activity-address" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 shadow-sm p-3 border" placeholder="e.g., 123 Main St">
+                    </div>
+                </div>
+                <button type="submit" id="activity-submit-btn" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">Save Activity</button>
+            </form>
+        </div>
+    </div>
     
     <div id="app-container">
         <div class="max-w-4xl mx-auto pb-24">
@@ -444,7 +517,7 @@
         window.initiateMagicLink = async function(e) { e.preventDefault(); const email = document.getElementById('auth-email').value, name = document.getElementById('auth-name').value; if (!email || !name) { displayMessage('Please enter name and email.', 'error'); return; } toggleLoading('magic-link-form', true, 'Sending...'); const { error } = await supabaseClient.auth.signInWithOtp({ email: email, options: { data: { full_name: name } } }); toggleLoading('magic-link-form', false); if (error) displayMessage(`Auth Error: ${error.message}`, 'error'); else { document.getElementById('login-modal').style.display = 'none'; displayMessage(`Magic link sent to ${email}.`, 'info'); } }
         
         function displayMessage(msg, type = 'info') { const ex = document.getElementById('status-message'); if (ex) ex.remove(); const el = document.createElement('div'); el.id = 'status-message'; el.className = `p-3 fixed top-4 left-1/2 transform -translate-x-1/2 z-[1001] text-sm rounded-lg shadow-xl ${type === 'error' ? 'bg-red-600' : 'bg-blue-600'} text-white transition-all`; el.textContent = msg; document.body.appendChild(el); setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 5000); }
-        function toggleLoading(fid, load, txt = 'Loading...') { const b = document.getElementById({ 'planner-form': 'plan-btn', 'search-form': 'search-btn', 'packing-form': 'pack-btn', 'flights-form': 'flights-btn', 'magic-link-form': 'magic-link-btn', 'qa-form': 'qa-submit-btn', 'feedback-form': 'feedback-submit-btn', 'profile-form': 'profile-submit-btn' }[fid]); if (b) { b.disabled = load; b.innerHTML = load ? `<span class="loading-ring mr-2"></span> ${txt}` : b.innerText; } }
+        function toggleLoading(fid, load, txt = 'Loading...') { const b = document.getElementById({ 'planner-form': 'plan-btn', 'search-form': 'search-btn', 'packing-form': 'pack-btn', 'flights-form': 'flights-btn', 'magic-link-form': 'magic-link-btn', 'qa-form': 'qa-submit-btn', 'feedback-form': 'feedback-submit-btn', 'profile-form': 'profile-submit-btn', 'activity-form': 'activity-submit-btn' }[fid]); if (b) { b.disabled = load; b.innerHTML = load ? `<span class="loading-ring mr-2"></span> ${txt}` : b.innerText; } }
         window.toggleAccordion = function(id) { const el = document.getElementById(`content-${id}`); el.classList.toggle('open'); document.getElementById(`icon-${id}`).querySelector('svg').style.transform = el.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)'; }
         function getCrowdBadge(l) { const c = { high: 'bg-red-100 text-red-700', moderate: 'bg-yellow-100 text-yellow-700', low: 'bg-green-100 text-green-700' }; return l ? `<span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ${c[l.toLowerCase()]||'bg-gray-200'}">Crowd: ${l}</span>` : ''; }
         function getStarClass(d) { const m = d?.match(/(\d)-star/i); return `stars-${m?Math.min(5,Math.max(0,parseInt(m[1]))):0}`; }
@@ -483,15 +556,13 @@
                 default_budget: document.getElementById('profile-budget').value,
                 dietary_needs: document.getElementById('profile-diet').value,
                 default_interests: document.getElementById('profile-interests').value,
-                // created_at is handled by default
             };
 
-            // 'upsert' means: update if exists, or insert if new.
             const { data, error } = await supabaseClient
                 .from('profiles')
                 .upsert(newProfile)
                 .select()
-                .single(); // We expect one row back
+                .single(); 
 
             if (error) {
                 console.error('Error saving profile:', error);
@@ -544,7 +615,88 @@
             currentImageRequestToken++; 
         }
 
-        // --- NEW FEATURES: Share, Speak, Download, Star ---
+        // --- *** NEW ACTIVITY MODAL FUNCTIONS *** ---
+        window.openActivityModal = function(dayIndex, cardIndex = -1) {
+            const modal = document.getElementById('activity-modal');
+            const form = document.getElementById('activity-form');
+            form.reset(); // Clear previous data
+            
+            document.getElementById('activity-day-index').value = dayIndex;
+            document.getElementById('activity-card-index').value = cardIndex;
+
+            if (cardIndex > -1) {
+                // --- EDIT MODE ---
+                const activity = currentItineraryData.days[dayIndex].activities[cardIndex];
+                document.getElementById('activity-modal-title').textContent = 'Edit Activity';
+                document.getElementById('activity-name').value = activity.name || '';
+                document.getElementById('activity-type').value = activity.type || '';
+                document.getElementById('activity-details').value = activity.details || '';
+                document.getElementById('activity-cost').value = activity.approxCostUSD || 0;
+                document.getElementById('activity-address').value = activity.address || '';
+            } else {
+                // --- ADD MODE ---
+                document.getElementById('activity-modal-title').textContent = 'Add New Activity';
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        window.closeActivityModal = function() {
+            document.getElementById('activity-modal').classList.add('hidden');
+        }
+
+        async function handleActivitySave(e) {
+            e.preventDefault();
+            if (!currentItineraryData) return;
+
+            toggleLoading('activity-form', true, 'Saving...');
+
+            const dayIndex = parseInt(document.getElementById('activity-day-index').value);
+            const cardIndex = parseInt(document.getElementById('activity-card-index').value);
+
+            const newActivityData = {
+                name: document.getElementById('activity-name').value,
+                type: document.getElementById('activity-type').value,
+                details: document.getElementById('activity-details').value,
+                approxCostUSD: parseInt(document.getElementById('activity-cost').value) || 0,
+                address: document.getElementById('activity-address').value,
+                crowdLevel: 'N/A' // Set a default
+            };
+
+            if (cardIndex > -1) {
+                // --- UPDATE EXISTING ---
+                // Merge new data with old, in case some fields were missing (like crowdLevel)
+                const oldActivity = currentItineraryData.days[dayIndex].activities[cardIndex];
+                currentItineraryData.days[dayIndex].activities[cardIndex] = { ...oldActivity, ...newActivityData };
+            } else {
+                // --- ADD NEW ---
+                if (!currentItineraryData.days[dayIndex].activities) {
+                    currentItineraryData.days[dayIndex].activities = []; // Ensure array exists
+                }
+                currentItineraryData.days[dayIndex].activities.push(newActivityData);
+            }
+
+            try {
+                // --- SAVE THE ENTIRE ITINERARY BLOB ---
+                await saveCurrentItinerary();
+                
+                // --- RE-RENDER THE ITINERARY (This is the magic!) ---
+                // We find out if the 'is_favorite' was true before re-rendering
+                const isFav = recentItineraries.find(i => i.id === currentItineraryId)?.is_favorite || false;
+                renderItinerary(currentItineraryData, isFav);
+                
+                displayMessage('Itinerary updated!');
+                closeActivityModal();
+            } catch (err) {
+                displayMessage('Error saving changes: ' + err.message, 'error');
+            } finally {
+                toggleLoading('activity-form', false, 'Save Activity');
+            }
+        }
+        // --- *** END NEW ACTIVITY MODAL FUNCTIONS *** ---
+
+
+        // --- Itinerary Features: Share, Speak, Download, Star ---
         window.shareItinerary = async function() {
             if (!currentItineraryData) return;
             const text = `Check out my trip to ${currentItineraryData.title}! Planned with TravelHub.`;
@@ -605,63 +757,7 @@
                 populateHistoryDropdown();
             }
         }
-
-        // --- *** NEW EDIT/SAVE FUNCTION *** ---
-        window.toggleEditItinerary = async function(btn) {
-            const contentDiv = document.getElementById('planner-content');
-            const isEditing = contentDiv.isContentEditable;
-
-            if (isEditing) {
-                // --- SAVE MODE ---
-                contentDiv.contentEditable = "false";
-                contentDiv.classList.remove('is-editable');
-                
-                // Update button icon/title back to "Edit"
-                btn.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>';
-                btn.title = "Edit Itinerary";
-                
-                // Get the new HTML and update the local data
-                const newHtml = contentDiv.innerHTML;
-                if (currentItineraryData) {
-                    // Store the raw HTML. This will now override the structured 'days' data.
-                    currentItineraryData.custom_html = newHtml; 
-                    
-                    // --- Save to Supabase ---
-                    if (supabaseClient && currentItineraryId) {
-                        displayMessage('Saving...', 'info');
-                        
-                        // We update the 'data' blob with our modified currentItineraryData object
-                        const { error } = await supabaseClient
-                            .from('itineraries')
-                            .update({ 
-                                data: currentItineraryData // This saves the whole object, including the new 'custom_html' property
-                            })
-                            .eq('id', currentItineraryId);
-                            
-                        if (error) {
-                            displayMessage('Error saving changes.', 'error');
-                            console.error('Error updating itinerary:', error);
-                        } else {
-                            displayMessage('Changes saved!');
-                        }
-                    }
-                }
-                
-            } else {
-                // --- EDIT MODE ---
-                contentDiv.contentEditable = "true";
-                contentDiv.classList.add('is-editable');
-                
-                // Update button icon/title to "Save"
-                btn.innerHTML = '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>';
-                btn.title = "Save Changes";
-                
-                contentDiv.focus();
-                displayMessage('Edit mode enabled. Click the save icon when done.', 'info');
-            }
-        }
-        // --- *** END NEW FUNCTION *** ---
-
+        
         window.downloadHTML = function() {
             if (!currentItineraryData) {
                 displayMessage('No itinerary to download.', 'error');
@@ -740,6 +836,7 @@
                             .replace(/class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700"/g, 'class="badge low"')
                             .replace(/class="tip-box tip-purple"/g, 'class="tip-box tip-purple"') // Food Tip
                             .replace(/class="tip-box tip-blue"/g, 'class="tip-box tip-blue"') // Transportation Tip
+                            .replace(/class="add-activity-btn"/g, 'style="display:none;"') // Hide add button
                         }
                     </div>
                     <div class="footer">
@@ -779,73 +876,105 @@
             e.preventDefault(); 
             toggleLoading('planner-form', true, 'Generating...'); 
             
-            // *** NEW: Get button element ***
             const planBtn = document.getElementById('plan-btn');
-            
-            // *** NEW: Get preferences to add to the form data ***
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
-            const userBudget = data.budget; // Get what user *just* selected
+            const userBudget = data.budget; 
 
-            // Get saved preferences
             const savedBudget = userProfile?.default_budget;
             const savedDiet = userProfile?.dietary_needs;
             const savedInterests = userProfile?.default_interests;
 
-            // Combine interests: user's input + saved interests
-            // filter(Boolean) removes any empty strings
             const combinedInterests = [savedInterests, data.interests].filter(Boolean).join(', ');
             data.interests = combinedInterests;
 
-            // Add dietary needs to interests string
             if (savedDiet) {
                 data.interests = `User has dietary needs: ${savedDiet}. ${data.interests}`;
             }
 
-            // *** BUG FIX FOR ITINERARY GENERATION ***
-            // Only apply the saved budget if the user *did not* make a new choice.
-            // 'Moderate' is the default value, so if it's still 'Moderate', we check for a pref.
             if (savedBudget && userBudget === 'Moderate') {
                  data.budget = savedBudget;
-                 // Also update the form UI to show the pref we're using
                  document.getElementById('budget').value = savedBudget;
-            } else {
-                // User *did* make a choice (e.g., "Extravagance" or "Low Budget")
-                // So we respect data.budget as-is.
             }
 
             try { 
-                // *** Apply &amp; fix to form data before sending ***
                 data['staying-at'] = decodeHTMLEntities(data['staying-at']);
                 data.interests = decodeHTMLEntities(data.interests);
                 
                 const res = await callApiProxy({ type: 'itinerary', data: data });
                 currentItineraryData = res; 
+                // *** NEW: Set a new property 'id' on the data itself ***
+                // This is a flag to 'saveCurrentItinerary' to let it know this is a NEW insert.
+                currentItineraryData.isNew = true; 
+                
                 await saveCurrentItinerary(); 
-                await loadItineraries(); 
-                // *** NEW: Set success text ***
+                await loadItineraries(); // This will re-load and render
                 planBtn.innerHTML = 'Itinerary Generated';
             } catch (err) { 
                 console.error("generateItinerary Error:", err);
                 displayMessage(err.message, 'error'); 
-                // *** NEW: Set original text on error ***
                 planBtn.innerHTML = 'Generate Itinerary';
             } finally { 
-                // *** MODIFIED: Just re-enable the button ***
                 planBtn.disabled = false;
             } 
         }
 
-        async function saveCurrentItinerary() { if (!isUserLoggedIn || !currentItineraryData) return;
-            const { data, error } = await supabaseClient.from('itineraries').insert([{ user_id: currentUserId, data: currentItineraryData }]).select();
-            if (!error && data) currentItineraryId = data[0].id;
+        async function saveCurrentItinerary() {
+            if (!isUserLoggedIn || !currentItineraryData) return;
+
+            // Check if this is a NEW itinerary or an UPDATE
+            if (currentItineraryData.isNew) {
+                // --- This is a NEW itinerary, so we INSERT it ---
+                delete currentItineraryData.isNew; // Remove our temporary flag
+                
+                const { data, error } = await supabaseClient
+                    .from('itineraries')
+                    .insert([{ user_id: currentUserId, data: currentItineraryData }])
+                    .select()
+                    .single(); // Get the new row back, including its ID
+
+                if (error) {
+                    console.error('Error inserting new itinerary:', error);
+                    throw new Error('Could not save new itinerary.');
+                } else if (data) {
+                    currentItineraryId = data.id; // Get the new ID
+                    currentItineraryData.id = data.id; // Store the ID in our local data
+                    
+                    // Find and update the item in recentItineraries
+                    const newEntry = { id: data.id, created_at: data.created_at, data: currentItineraryData, is_favorite: false };
+                    recentItineraries.unshift(newEntry); // Add to start of list
+                }
+                
+            } else {
+                // --- This is an UPDATE to an existing itinerary ---
+                if (!currentItineraryId) {
+                    console.error('Cannot update: currentItineraryId is not set.');
+                    return;
+                }
+                
+                const { error } = await supabaseClient
+                    .from('itineraries')
+                    .update({ data: currentItineraryData }) // Just update the data blob
+                    .eq('id', currentItineraryId);
+                
+                if (error) {
+                    console.error('Error updating itinerary:', error);
+                    throw new Error('Could not update itinerary.');
+                }
+            }
         }
+
 
         async function loadItineraries() { if (!isUserLoggedIn) return;
             const { data, error } = await supabaseClient.from('itineraries').select('id, created_at, data, is_favorite').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(5);
             if (!error && data?.length) { 
-                // *** Apply &amp; fix on load ***
-                recentItineraries = data.map(i => ({...i, data: deepSanitize(i.data)})); 
+                recentItineraries = data.map(i => {
+                    const saneData = deepSanitize(i.data);
+                    // *** NEW: Ensure the ID is part of the data object ***
+                    saneData.id = i.id; 
+                    return { ...i, data: saneData };
+                }); 
+                
                 currentItineraryData = recentItineraries[0].data; 
                 currentItineraryId = recentItineraries[0].id;
                 renderItinerary(currentItineraryData, recentItineraries[0].is_favorite); 
@@ -871,7 +1000,7 @@
             } 
         }
 
-        // --- *** MODIFIED RENDER FUNCTION *** ---
+        // --- *** HEAVILY MODIFIED RENDER FUNCTION *** ---
         function renderItinerary(data, isFav = false) {
             const div = document.getElementById('planner-content'), hdr = document.getElementById('itinerary-header');
             if(!data) { 
@@ -881,9 +1010,9 @@
                 document.getElementById('download-html-btn').classList.add('hidden'); 
                 return; 
             }
-            // *** Apply &amp; fix to all data before rendering ***
-            // *** NEW: Add 'custom_html' to destructuring ***
-            const { title, summary, budgetTier, bestSeasonToVisit, numberOfPeople, costPerHeadUSD, days, custom_html } = deepSanitize(data);
+            
+            // We no longer check for custom_html. We always render from data.
+            const { title, summary, budgetTier, bestSeasonToVisit, numberOfPeople, costPerHeadUSD, days } = deepSanitize(data);
             
             hdr.innerHTML = `
                 <div class="flex justify-between items-start">
@@ -892,8 +1021,7 @@
                          <button id="fav-btn" onclick="toggleFavorite()" title="Save to Favorites" class="${isFav ? 'text-yellow-400' : 'text-gray-400'} hover:text-yellow-500 transition"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg></button>
                          <button onclick="shareItinerary()" title="Share Itinerary" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg></button>
                          <button onclick="readItinerary()" title="Read Itinerary Aloud" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg></button>
-                         <button id="edit-btn" onclick="toggleEditItinerary(this)" title="Edit Itinerary" class="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
-                    </div>
+                         </div>
                 </div>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">${summary}</p>
                 <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
@@ -905,75 +1033,76 @@
             `;
 
             let html = '';
+            if (days?.[0]?.transportation_tip) {
+                html += `<div class="tip-box tip-blue">
+                            <svg class="tip-box-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <div class="tip-box-content">
+                                <h5>Transportation Tip</h5>
+                                <p>${days[0].transportation_tip}</p>
+                            </div>
+                         </div>`;
+            }
 
-            // --- *** NEW EDIT-MODE CHECK *** ---
-            if (custom_html) {
-                // If user has saved custom HTML, just render that.
-                div.innerHTML = custom_html;
-            } else {
-                // --- *** ORIGINAL RENDER LOGIC *** ---
-                // *** NEW: Styled Transportation Tip ***
-                if (days?.[0]?.transportation_tip) {
-                    html += `<div class="tip-box tip-blue">
+            if (days) days.forEach((d, dayIndex) => { // <-- Added dayIndex
+                html += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${d.day}: ${d.theme} (${d.city})</h4>`;
+                
+                if (d.foodSuggestion) {
+                    html += `<div class="tip-box tip-purple">
                                 <svg class="tip-box-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 <div class="tip-box-content">
-                                    <h5>Transportation Tip</h5>
-                                    <p>${days[0].transportation_tip}</p>
+                                    <h5>Food Suggestion</h5>
+                                    <p>${d.foodSuggestion}</p>
                                 </div>
-                            </div>`;
+                             </div>`;
                 }
 
-                if (days) days.forEach(d => {
-                    html += `<div class="mt-8"><h4 class="text-xl font-bold text-indigo-700 dark:text-indigo-400">Day ${d.day}: ${d.theme} (${d.city})</h4>`;
-                    
-                    // *** NEW: Styled Food Tip with new Icon ***
-                    if (d.foodSuggestion) {
-                        html += `<div class="tip-box tip-purple">
-                                    <svg class="tip-box-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    <div class="tip-box-content">
-                                        <h5>Food Suggestion</h5>
-                                        <p>${d.foodSuggestion}</p>
-                                    </div>
-                                </div>`;
-                    }
+                html += `<div class="mt-4 space-y-4">`;
+                if(d.activities) d.activities.forEach((a, cardIndex) => { // <-- Added cardIndex
+                    const st = (a.type?.toLowerCase().match(/hotel|accommodation/)) ? `<div class="mt-2 star-rating ${getStarClass(a.details)}"></div>` : '';
+                    html += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex items-center flex-wrap">
+                                        <h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${a.name}</h5>
+                                        
+                                        <button onclick="openQaModal('${sanitizeHTML(a.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800" title="Ask a question about this">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        </button>
+                                        <button onclick="openImageModal('${sanitizeHTML(a.name + ', ' + d.city)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 ml-1" title="See an image of this">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        </button>
+                                        <button onclick="openActivityModal(${dayIndex}, ${cardIndex})" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 ml-1" title="Edit this activity">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        </button>
 
-                    html += `<div class="mt-4 space-y-4">`;
-                    if(d.activities) d.activities.forEach(a => {
-                        const st = (a.type?.toLowerCase().match(/hotel|accommodation/)) ? `<div class="mt-2 star-rating ${getStarClass(a.details)}"></div>` : '';
-                        // *** NEW: Added camera icon button ***
-                        html += `<div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <div class="flex justify-between items-start">
-                                        <div class="flex items-center flex-wrap">
-                                            <h5 class="font-bold text-gray-800 dark:text-gray-100 mr-2">${a.name}</h5>
-                                            <button onclick="openQaModal('${sanitizeHTML(a.name)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800" title="Ask a question about this">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.19-1.228 2.94-1.11 1.09-2.296 2.06-2.772 3.06-.339.68-.426 1.38-.426 2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            </button>
-                                            <button onclick="openImageModal('${sanitizeHTML(a.name + ', ' + d.city)}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 ml-1" title="See an image of this">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                            </button>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="font-semibold text-gray-800 dark:text-gray-100">$${a.approxCostUSD}</p>
-                                            ${getCrowdBadge(a.crowdLevel)}
-                                        </div>
                                     </div>
-                                    <p class="text-sm text-gray-500 dark:text-gray-500">${a.type}</p>
-                                    <p class="mt-2 text-gray-700 dark:text-gray-300">${a.details}</p>
-                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-500">${a.address}</p>
-                                    ${st}
-                                </div>`;
-                    });
-                    html += '</div></div>';
+                                    <div class="text-right">
+                                        <p class="font-semibold text-gray-800 dark:text-gray-100">$${a.approxCostUSD}</p>
+                                        ${getCrowdBadge(a.crowdLevel)}
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-500">${a.type}</p>
+                                <p class="mt-2 text-gray-700 dark:text-gray-300">${a.details}</p>
+                                <p class="mt-2 text-xs text-gray-500 dark:text-gray-500">${a.address}</p>
+                                ${st}
+                             </div>`;
                 });
-                div.innerHTML = html;
-            }
-            // --- *** END OF NEW/ORIGINAL LOGIC WRAPPER *** ---
+                html += '</div>';
+
+                // --- *** NEW "+ ADD ACTIVITY" BUTTON FOR EACH DAY *** ---
+                html += `
+                    <button class="add-activity-btn" onclick="openActivityModal(${dayIndex})">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Add Activity to Day ${d.day}
+                    </button>
+                `;
+
+                html += '</div>';
+            });
+            div.innerHTML = html;
             
             hdr.classList.remove('hidden'); 
             document.getElementById('packing-integration-section').classList.remove('hidden'); 
             document.getElementById('download-html-btn').classList.remove('hidden');
-            
-            // --- *** This pre-fill logic now runs for both custom and generated HTML *** ---
             document.getElementById('pack-destination').value = title; 
             document.getElementById('pack-duration').value = days?.length||3; 
             document.getElementById('pack-season').value = bestSeasonToVisit;
@@ -986,7 +1115,6 @@
         async function main() {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            // *** NEW, CORRECTED AUTH LOGIC (FIXES LOGIN BUG) ***
             supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 console.log("Auth Event:", event); // For debugging
                 
@@ -994,11 +1122,9 @@
                 isUserLoggedIn = !!user; // Update global state
 
                 if (user) {
-                    // User is signed in or session is restored
                     currentUserId = user.id;
                     currentUserName = user.user_metadata?.full_name || 'Friend';
                     
-                    // *** NEW: Fetch or create user profile ***
                     const { data: profileData, error: profileError } = await supabaseClient
                         .from('profiles')
                         .select('*')
@@ -1010,7 +1136,6 @@
                     } else if (profileData) {
                         userProfile = profileData;
                     } else {
-                        // No profile found, let's create one
                         const { data: newProfile, error: createError } = await supabaseClient
                             .from('profiles')
                             .insert({ id: currentUserId })
@@ -1023,61 +1148,45 @@
                             userProfile = newProfile;
                         }
                     }
-                    // *** END NEW PROFILE LOGIC ***
                     
                     if (event === 'SIGNED_IN') {
-                        // This happens *after* magic link click
                         setUIState(true);
                         displayMessage(`Welcome ${currentUserName}!`); 
                         loadItineraries();
-                        switchTab('planner-panel'); // Show planner
+                        switchTab('planner-panel');
                     } else if (event === 'INITIAL_SESSION') {
-                        // This happens on page refresh when *already* logged in
                         setUIState(true);
                         loadItineraries();
-                        switchTab('planner-panel'); // Show planner
+                        switchTab('planner-panel');
                     }
                 } else {
-                    // User is not logged in
                     isUserLoggedIn = false;
                     currentUserId = 'anonymous_user';
                     currentUserName = 'Anonymous';
-                    userProfile = null; // Clear profile
+                    userProfile = null; 
 
-                    // *** THIS IS THE FIX ***
-                    // Only show the login modal if this is the *first* auth event
-                    // AND it's an empty session (i.e., not a magic link redirect).
-                    // If the user is clicking a magic link, the URL will have a hash.
                     if (event === 'INITIAL_SESSION' && !session && !window.location.hash.includes('access_token')) {
-                         // This is the first load, user is not logged in, and NOT a magic link.
-                         // It is safe to show the login modal.
                          setUIState(false); 
-                         switchTab('planner-panel'); // Default to planner tab, but modal will be on top
+                         switchTab('planner-panel'); 
                     } else if (event === 'SIGNED_OUT') {
-                         // If user *explicitly* logs out, show modal immediately.
                          setUIState(false); 
                          switchTab('planner-panel');
                     }
-                    // If it's INITIAL_SESSION and *there is* a hash, we do *nothing*.
-                    // We wait for the 'SIGNED_IN' event to fire.
                 }
             });
-            // *** END OF NEW AUTH LOGIC ***
 
             document.getElementById('magic-link-form').addEventListener('submit', initiateMagicLink);
             document.getElementById('qa-form').addEventListener('submit', handleQaSubmit);
             document.getElementById('feedback-form').addEventListener('submit', handleFeedbackSubmit);
             document.getElementById('planner-form').addEventListener('submit', generateItinerary);
-            document.getElementById('profile-form').addEventListener('submit', handleProfileSave); // *** NEW Event Listener ***
+            document.getElementById('profile-form').addEventListener('submit', handleProfileSave);
+            // *** NEW EVENT LISTENER FOR THE NEW MODAL ***
+            document.getElementById('activity-form').addEventListener('submit', handleActivitySave);
             
             document.getElementById('search-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('search-form', true, 'Searching...'); try { const res = await callApiProxy({ type: 'groundedSearch', query: document.getElementById('query').value }); document.getElementById('search-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('search-title').classList.remove('hidden'); } catch(e){displayMessage('Search failed','error')} finally { toggleLoading('search-form', false); } });
             document.getElementById('packing-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('packing-form', true, 'Packing...'); try { const res = await callApiProxy({ type: 'packingList', data: Object.fromEntries(new FormData(e.target).entries()) }); document.getElementById('packing-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('packing-title').classList.remove('hidden'); } catch(e){} finally { toggleLoading('packing-form', false); } });
             document.getElementById('flights-form').addEventListener('submit', async (e) => { e.preventDefault(); toggleLoading('flights-form', true, 'Flying...'); try { const res = await callApiProxy({ type: 'flights', data: Object.fromEntries(new FormData(e.target).entries()) }); document.getElementById('flights-content').innerHTML = marked.parse(res.candidates[0].content.parts[0].text); document.getElementById('flights-title').classList.remove('hidden'); } catch(e){} finally { toggleLoading('flights-form', false); } });
             document.getElementById('convert-btn-standalone').onclick = async () => { toggleLoading('converter-form-standalone', true, ''); try { const res = await callApiProxy({ type: 'currency', amount: document.getElementById('convert-amount-standalone').value, from: document.getElementById('convert-from-standalone').value, to: document.getElementById('convert-to-standalone').value }); document.getElementById('converter-result-standalone').textContent = res.candidates[0].content.parts[0].text; } catch(e){} finally { toggleLoading('converter-form-standalone', false, 'Convert'); } };
-            
-            // We no longer call switchTab here; auth logic handles it.
-            // If user is not logged in, setUIState(false) will run and show the login modal.
-            // If user IS logged in, auth logic will call setUIState(true) and switch to the planner tab.
             
             CURRENCIES.forEach(c => { const o = `<option value="${c.code}">${c.code} - ${c.name}</option>`; document.getElementById('convert-from-standalone').innerHTML += o; document.getElementById('convert-to-standalone').innerHTML += o; });
             document.getElementById('convert-from-standalone').value = 'USD'; document.getElementById('convert-to-standalone').value = 'EUR';
@@ -1097,3 +1206,4 @@
     </script>
 </body>
 </html>
+        
